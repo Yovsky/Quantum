@@ -33,6 +33,8 @@ public:
     explicit urlDialog(QWidget *parent = nullptr);
     ~urlDialog();
 
+private slots:
+    void on_buttonBox_accepted();
 private:
     Ui::urlDialog *ui;
 };
