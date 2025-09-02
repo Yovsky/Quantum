@@ -21,17 +21,32 @@ DownloadWindow::DownloadWindow(QWidget *parent)
 
 void DownloadWindow::startDownload(const QUrl &url, const QString &savePath)
 {
+    ui->adress->setText(url.toString());
     ui->progressBar->setValue(0);
     ui->status->setText("Starting Download...");
     download->download(url, savePath);
 }
 
-void DownloadWindow::onProgressChange(qint64 bytesrecived, qint64 bytestotal)
+void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 {
-    ui->progressBar->setValue((bytesrecived / bytestotal) * 100);
+    if (bytesTotal <= 0) {
+        ui->progressBar->setValue(0);
+        return;
+    }
 
-    ui->downloaded->setText(QString::number(bytesrecived / 1024 / 1024));
-    ui->fileSize->setText(QString::number(bytestotal / 1024 / 1024));
+    double progress = (static_cast<double>(bytesReceived) / bytesTotal) * 100.0;
+    ui->progressBar->setValue(static_cast<int>(progress));
+
+    double mbReceived = bytesReceived / (1024.0 * 1024.0);
+    double mbTotal = bytesTotal / (1024.0 * 1024.0);
+
+    ui->downloaded->setText(QString::number(mbReceived, 'f', 2) + " MB");
+
+    if (bytesTotal > 0) {
+        ui->fileSize->setText(QString::number(mbTotal, 'f', 2) + " MB");
+    } else {
+        ui->fileSize->setText("Unknown");
+    }
 }
 
 void DownloadWindow::onDownloadFinish(bool success, const QString &message)
