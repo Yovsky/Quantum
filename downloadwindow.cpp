@@ -75,17 +75,17 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
     }
     else if (bytesTotal < std::pow(1024, 2))
     {
-        Received = bytesTotal / 1024.0;
+        Total = bytesTotal / 1024.0;
         Totmsg = QString::number(Total, 'f', 2) + " KB";
     }
     else if (bytesTotal < std::pow(1024, 3))
     {
-        Received = bytesTotal / (1024.0 * 1024.0);
+        Total = bytesTotal / (1024.0 * 1024.0);
         Totmsg = QString::number(Total, 'f', 2) + " MB";
     }
     else if (bytesTotal < std::pow(1024, 4))
     {
-        Received = bytesTotal / (1024.0 * 1024.0 * 1024);
+        Total = bytesTotal / (1024.0 * 1024.0 * 1024);
         Totmsg = QString::number(Total, 'f', 2) + " GB";
     }
 
