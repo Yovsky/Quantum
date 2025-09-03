@@ -69,24 +69,24 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
     }
 
 
-    if(bytesReceived < 1024)
+    if(bytesTotal < 1024)
     {
         Totmsg = QString::number(bytesTotal, 'f', 2) + " Bytes";
     }
-    else if (bytesReceived < std::pow(1024, 2))
+    else if (bytesTotal < std::pow(1024, 2))
     {
         Received = bytesTotal / 1024.0;
-        Totmsg = QString::number(Received, 'f', 2) + " KB";
+        Totmsg = QString::number(Total, 'f', 2) + " KB";
     }
-    else if (bytesReceived < std::pow(1024, 3))
+    else if (bytesTotal < std::pow(1024, 3))
     {
         Received = bytesTotal / (1024.0 * 1024.0);
-        Totmsg = QString::number(Received, 'f', 2) + " MB";
+        Totmsg = QString::number(Total, 'f', 2) + " MB";
     }
-    else if (bytesReceived < std::pow(1024, 4))
+    else if (bytesTotal < std::pow(1024, 4))
     {
         Received = bytesTotal / (1024.0 * 1024.0 * 1024);
-        Totmsg = QString::number(Received, 'f', 2) + " GB";
+        Totmsg = QString::number(Total, 'f', 2) + " GB";
     }
 
     QTime currentTime = QTime::currentTime();
