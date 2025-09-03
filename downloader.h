@@ -13,6 +13,7 @@ class Downloader : public QObject
 public:
     explicit Downloader(QObject *parent = nullptr);
     void download(const QUrl &url, const QString &savePath);
+    void downloadStop();
 signals:
     void downloadStarted();
     void progressChanged(qint64 bytesRecived, qint64 bytesTotal);

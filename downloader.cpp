@@ -50,3 +50,9 @@ void Downloader::onDownloadFinished()
     emit downloadFinished(true, "Download completed successfully.");
     reply->deleteLater();
 }
+
+void Downloader::downloadStop()
+{
+    file.remove();
+    reply->deleteLater();
+}

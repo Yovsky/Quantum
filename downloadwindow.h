@@ -22,6 +22,9 @@ public:
 private slots:
     void onProgressChange(qint64 bytesrecived, qint64 bytestotal);
     void onDownloadFinish(bool success, const QString &message);
+    void downloadStop();
+
+    void on_Cancel_clicked();
 
 private:
     Ui::DownloadWindow *ui;

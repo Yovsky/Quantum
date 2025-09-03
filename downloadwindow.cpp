@@ -153,7 +153,19 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
     }
 }
 
+void DownloadWindow::downloadStop()
+{
+    download->downloadStop();
+    this->close();
+}
+
 DownloadWindow::~DownloadWindow()
 {
     delete ui;
 }
+
+void DownloadWindow::on_Cancel_clicked()
+{
+    downloadStop();
+}
+

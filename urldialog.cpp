@@ -39,27 +39,23 @@ void urlDialog::on_buttonBox_accepted()
 {
     QString urlText = ui->Url->text().trimmed();
 
-    // Validate the URL
     QUrl address(urlText);
     if (!address.isValid() || address.scheme().isEmpty()) {
         QMessageBox::warning(this, "Invalid URL", "Please enter a valid URL (e.g., https://example.com/file.zip)");
         return;
     }
 
-    // Generate a safe filename
     QString fileName = QFileInfo(address.path()).fileName();
     if (fileName.isEmpty() || fileName == ".") {
         fileName = "downloaded_file_" + QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
     }
 
-    // FIXED: Use QStandardPaths to get the correct Downloads directory
     QString downloadsDir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
     if (downloadsDir.isEmpty()) {
         QMessageBox::warning(this, "Error", "Cannot find Downloads directory");
         return;
     }
 
-    // FIXED: Create the Downloads directory if it doesn't exist
     QDir dir(downloadsDir);
     if (!dir.exists()) {
         if (!dir.mkpath(".")) {
@@ -70,7 +66,6 @@ void urlDialog::on_buttonBox_accepted()
 
     QString savePath = downloadsDir + "/" + fileName;
 
-    // Create and show download window
     DownloadWindow *window = new DownloadWindow(nullptr);
     window->startDownload(address, savePath);
     window->setAttribute(Qt::WA_DeleteOnClose);
