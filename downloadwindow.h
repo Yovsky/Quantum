@@ -4,6 +4,7 @@
 #include "downloader.h"
 #include <QWidget>
 #include <QUrl>
+#include <QElapsedTimer>
 
 namespace Ui {
 class DownloadWindow;
@@ -25,6 +26,9 @@ private slots:
 private:
     Ui::DownloadWindow *ui;
     Downloader *download;
+    QElapsedTimer downloadTimer;
+    qint64 lastBytesReceived = 0;
+    QTime lastUpdateTime;
 };
 
 #endif // DOWNLOADWINDOW_H
