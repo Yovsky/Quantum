@@ -41,25 +41,30 @@ void urlDialog::on_buttonBox_accepted()
     QString urlText = ui->Url->text().trimmed();
 
     QUrl address(urlText);
-    if (!address.isValid() || address.scheme().isEmpty()) {
+    if (!address.isValid() || address.scheme().isEmpty())
+    {
         QMessageBox::warning(this, "Invalid URL", "Please enter a valid URL (e.g., https://example.com/file.zip)");
         return;
     }
 
     QString fileName = QFileInfo(address.path()).fileName();
-    if (fileName.isEmpty() || fileName == ".") {
+    if (fileName.isEmpty() || fileName == ".")
+    {
         fileName = "downloaded_file_" + QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
     }
 
     QString downloadsDir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-    if (downloadsDir.isEmpty()) {
+    if (downloadsDir.isEmpty())
+    {
         QMessageBox::warning(this, "Error", "Cannot find Downloads directory");
         return;
     }
 
     QDir dir(downloadsDir);
-    if (!dir.exists()) {
-        if (!dir.mkpath(".")) {
+    if (!dir.exists())
+    {
+        if (!dir.mkpath("."))
+        {
             QMessageBox::warning(this, "Error", "Cannot create Downloads directory: " + downloadsDir);
             return;
         }

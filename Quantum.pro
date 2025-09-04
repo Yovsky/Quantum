@@ -10,6 +10,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    appglobals.cpp \
     downloader.cpp \
     downloadwindow.cpp \
     finishwindow.cpp \
@@ -18,6 +19,7 @@ SOURCES += \
     urldialog.cpp
 
 HEADERS += \
+    appglobals.h \
     downloader.h \
     downloadwindow.h \
     finishwindow.h \
