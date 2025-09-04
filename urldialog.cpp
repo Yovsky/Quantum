@@ -22,6 +22,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QMessageBox>
+#include <QPushButton>
 
 urlDialog::urlDialog(QWidget *parent)
     : QDialog(parent)
@@ -66,9 +67,25 @@ void urlDialog::on_buttonBox_accepted()
 
     QString savePath = downloadsDir + "/" + fileName;
 
-    DownloadWindow *window = new DownloadWindow(nullptr);
-    window->startDownload(address, savePath);
-    window->setAttribute(Qt::WA_DeleteOnClose);
-    window->show();
-
+    QFileInfo file(savePath);
+    if (file.isFile() || file.exists())
+    {
+        QMessageBox msg;
+        msg.setWindowTitle("File Already Exists");
+        msg.setText("The target file already exists in the directory. \nDo you want to replace it?");
+        msg.setIcon(QMessageBox::Warning);
+        QPushButton *No = msg.addButton("No", QMessageBox::DestructiveRole);
+        QPushButton *Yes = msg.addButton("Yes", QMessageBox::AcceptRole);
+        msg.setDefaultButton(Yes);
+        msg.exec();
+        if (msg.clickedButton() == Yes)
+        {
+            DownloadWindow *window = new DownloadWindow(nullptr);
+            window->startDownload(address, savePath);
+            window->setAttribute(Qt::WA_DeleteOnClose);
+            window->show();
+        }
+        if (msg.clickedButton() == No)
+            return;
+    }
 }
