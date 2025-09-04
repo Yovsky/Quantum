@@ -12,6 +12,7 @@ CONFIG += c++17
 SOURCES += \
     downloader.cpp \
     downloadwindow.cpp \
+    finishwindow.cpp \
     main.cpp \
     qdman.cpp \
     urldialog.cpp
@@ -19,11 +20,13 @@ SOURCES += \
 HEADERS += \
     downloader.h \
     downloadwindow.h \
+    finishwindow.h \
     qdman.h \
     urldialog.h
 
 FORMS += \
     downloadwindow.ui \
+    finishwindow.ui \
     qdman.ui \
     urldialog.ui
 

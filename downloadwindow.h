@@ -32,6 +32,8 @@ private:
     QElapsedTimer downloadTimer;
     qint64 lastBytesReceived = 0;
     QTime lastUpdateTime;
+    QString fileUrl;
+    QString filePath;
 };
 
 #endif // DOWNLOADWINDOW_H

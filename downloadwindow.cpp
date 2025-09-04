@@ -1,6 +1,7 @@
 #include "downloadwindow.h"
 #include "ui_downloadwindow.h"
 #include "downloader.h"
+#include "finishwindow.h"
 #include <QMessageBox>
 #include <QSystemTrayIcon>
 #include <QElapsedTimer>
@@ -25,6 +26,9 @@ void DownloadWindow::startDownload(const QUrl &url, const QString &savePath)
     ui->adress->setText(url.toString());
     ui->progressBar->setValue(0);
     ui->status->setText("Starting Download...");
+
+    fileUrl = url.toString();
+    filePath = savePath;
 
     downloadTimer.start();
     lastBytesReceived = 0;
@@ -151,6 +155,11 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
         QSystemTrayIcon tray;
         tray.showMessage("QDMan", message);
     }
+
+    this->close();
+
+    FinishWindow finish(this, fileUrl, filePath);
+    finish.exec();
 }
 
 void DownloadWindow::downloadStop()
