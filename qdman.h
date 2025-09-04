@@ -19,6 +19,7 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "downloadwindow.h"
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
@@ -34,6 +35,12 @@ class QDMan : public QMainWindow
 public:
     QDMan(QWidget *parent = nullptr);
     ~QDMan();
+
+private slots:
+    void onDownloadWindowCreated(DownloadWindow *dw);
+
+public slots:
+    void SetTable(QString Info);
 
 private slots:
     void on_actionAdd_New_Download_triggered();

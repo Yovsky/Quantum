@@ -18,12 +18,13 @@ void AppGlobals::setMainWindow(QDMan *MainWindow)
     m_MainWindow = MainWindow;
 }
 
-DownloadWindow *AppGlobals::Download() const
+DownloadWindow *AppGlobals::downloadWindow() const
 {
-    return m_Download;
+    return m_downloadWindow;
 }
 
-void AppGlobals::setDownload(DownloadWindow *Download)
+void AppGlobals::setDownloadWindow(DownloadWindow *downloadWindow)
 {
-    m_Download = Download;
+    m_downloadWindow = downloadWindow;
+    emit downloadWindowCreated(m_downloadWindow); // EMIT THE SIGNAL
 }

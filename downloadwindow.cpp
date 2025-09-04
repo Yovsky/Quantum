@@ -1,3 +1,4 @@
+#include "appglobals.h"
 #include "downloadwindow.h"
 #include "ui_downloadwindow.h"
 #include "downloader.h"
@@ -5,19 +6,24 @@
 #include <QMessageBox>
 #include <QSystemTrayIcon>
 #include <QElapsedTimer>
+#include <QFileInfo>
 
 DownloadWindow::DownloadWindow(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::DownloadWindow)
     , download(new Downloader(this))
+    , Status("Unknown")
 {
     ui->setupUi(this);
+    AppGlobals::instance().setDownloadWindow(this);
+
 
     connect(download, &Downloader::progressChanged, this, &DownloadWindow::onProgressChange);
     connect(download, &Downloader::downloadFinished, this, &DownloadWindow::onDownloadFinish);
     connect(download, &Downloader::downloadStarted, this, [this]()
     {
-        ui->status->setText("Downloading...");
+        Status = "Downloading...";
+        ui->status->setText(Status);
     });
 }
 
@@ -25,13 +31,15 @@ void DownloadWindow::startDownload(const QUrl &url, const QString &savePath)
 {
     ui->adress->setText(url.toString());
     ui->progressBar->setValue(0);
-    ui->status->setText("Starting Download...");
+    Status = "Starting Download...";
+    ui->status->setText(Status);
 
     fileUrl = url.toString();
     filePath = savePath;
 
     downloadTimer.start();
     lastBytesReceived = 0;
+    DownloadDate = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
     lastUpdateTime = QTime::currentTime();
     download->download(url, savePath);
 }
@@ -49,7 +57,6 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
     double Received = 0;
     double Total = 0;
     QString Recmsg;
-    QString Totmsg;
 
 
     if(bytesReceived < 1024)
@@ -75,22 +82,22 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 
     if(bytesTotal < 1024)
     {
-        Totmsg = QString::number(bytesTotal, 'f', 2) + " Bytes";
+        Size = QString::number(bytesTotal, 'f', 2) + " Bytes";
     }
     else if (bytesTotal < std::pow(1024, 2))
     {
         Total = bytesTotal / 1024.0;
-        Totmsg = QString::number(Total, 'f', 2) + " KB";
+        Size = QString::number(Total, 'f', 2) + " KB";
     }
     else if (bytesTotal < std::pow(1024, 3))
     {
         Total = bytesTotal / (1024.0 * 1024.0);
-        Totmsg = QString::number(Total, 'f', 2) + " MB";
+        Size = QString::number(Total, 'f', 2) + " MB";
     }
     else if (bytesTotal < std::pow(1024, 4))
     {
         Total = bytesTotal / (1024.0 * 1024.0 * 1024);
-        Totmsg = QString::number(Total, 'f', 2) + " GB";
+        Size = QString::number(Total, 'f', 2) + " GB";
     }
 
     QTime currentTime = QTime::currentTime();
@@ -104,7 +111,8 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 
         if (secondsSinceLast > 0) {
             double instantSpeed = mbSinceLast / secondsSinceLast;
-            ui->transSpeed->setText(QString::number(instantSpeed, 'f', 2) + " MB/s");
+            Transfer = QString::number(instantSpeed, 'f', 2) + " MB/s";
+            ui->transSpeed->setText(Transfer);
 
             int sRTA = ((bytesTotal - bytesReceived) / (1024 * 1024)) / instantSpeed;
             int mRTA = 0;
@@ -130,6 +138,7 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 
         lastBytesReceived = bytesReceived;
         lastUpdateTime = currentTime;
+        GatherDownloadInfo();
     }
 
 
@@ -137,15 +146,26 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
     ui->downloaded->setText(Recmsg);
 
     if (bytesTotal > 0) {
-        ui->fileSize->setText(Totmsg);
+        ui->fileSize->setText(Size);
     } else {
         ui->fileSize->setText("Unknown");
     }
 }
 
+void DownloadWindow::GatherDownloadInfo()
+{
+    QString Info = QFileInfo(filePath).fileName() + "|";
+    Info += Size + "|";
+    Info += Status + "|";
+    Info += Transfer + "|";
+    Info += DownloadDate;
+    emit DownloadInfo(Info);
+}
+
 void DownloadWindow::onDownloadFinish(bool success, const QString &message)
 {
-    ui->status->setText((success)? "Completed." : "Failed.");
+    Status = (success)? "Completed." : "Failed.";
+    ui->status->setText(Status);
     if (!success)
         QMessageBox::critical(this, "Download Error", message);
     else

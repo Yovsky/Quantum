@@ -23,8 +23,11 @@ public:
     void setMainWindow(QDMan *MainWindow);
 
     //For the second window.
-    DownloadWindow *Download() const;
-    void setDownload(DownloadWindow *Download);
+    DownloadWindow *downloadWindow() const;
+    void setDownloadWindow(DownloadWindow *downloadWindow);
+
+signals:
+    void downloadWindowCreated(DownloadWindow *newWindow);
 
 private:
     AppGlobals();
@@ -33,7 +36,7 @@ private:
     void operator = (const AppGlobals&) = delete;
 
     QDMan *m_MainWindow = nullptr;
-    DownloadWindow *m_Download = nullptr;
+    DownloadWindow *m_downloadWindow = nullptr;
 };
 
 #endif // APPGLOBALS_H

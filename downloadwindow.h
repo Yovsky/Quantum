@@ -17,6 +17,7 @@ class DownloadWindow : public QWidget
 public:
     explicit DownloadWindow(QWidget *parent = nullptr);
     void startDownload(const QUrl &url, const QString &savePath);
+    void GatherDownloadInfo();
     ~DownloadWindow();
 
 private slots:
@@ -26,14 +27,21 @@ private slots:
 
     void on_Cancel_clicked();
 
+signals:
+    void DownloadInfo(QString Info);
+
 private:
     Ui::DownloadWindow *ui;
     Downloader *download;
+    QString filePath;
+    QString Status;
+    QString Transfer;
+    QString Size;
+    QString DownloadDate;
     QElapsedTimer downloadTimer;
     qint64 lastBytesReceived = 0;
     QTime lastUpdateTime;
     QString fileUrl;
-    QString filePath;
 };
 
 #endif // DOWNLOADWINDOW_H

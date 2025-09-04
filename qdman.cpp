@@ -17,6 +17,8 @@
 */
 
 #include "qdman.h"
+#include "appglobals.h"
+#include "downloadwindow.h"
 #include "ui_qdman.h"
 #include "urldialog.h"
 
@@ -25,6 +27,14 @@ QDMan::QDMan(QWidget *parent)
     , ui(new Ui::QDMan)
 {
     ui->setupUi(this);
+    AppGlobals::instance().setMainWindow(this);
+    connect(&AppGlobals::instance(), &AppGlobals::downloadWindowCreated, this, &QDMan::onDownloadWindowCreated);
+}
+
+void QDMan::onDownloadWindowCreated(DownloadWindow *dw)
+{
+    if (dw)
+        connect(dw, &DownloadWindow::DownloadInfo, this, &QDMan::SetTable);
 }
 
 QDMan::~QDMan()
@@ -32,9 +42,13 @@ QDMan::~QDMan()
     delete ui;
 }
 
+void QDMan::SetTable(QString Info)
+{
+    ui->nuh->setText(Info);
+}
+
 void QDMan::on_actionAdd_New_Download_triggered()
 {
     urlDialog dialog(this);
     dialog.exec();
 }
-
