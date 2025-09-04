@@ -106,7 +106,7 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
             double instantSpeed = mbSinceLast / secondsSinceLast;
             ui->transSpeed->setText(QString::number(instantSpeed, 'f', 2) + " MB/s");
 
-            int sRTA = (bytesTotal / (1024 * 1024)) / instantSpeed;
+            int sRTA = ((bytesTotal - bytesReceived) / (1024 * 1024)) / instantSpeed;
             int mRTA = 0;
             int hRTA = 0;
             while (sRTA >= 60)
@@ -124,8 +124,7 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
                 timeRemaining += QString::number(hRTA) + " h ";
             if(mRTA != 0)
                 timeRemaining += QString::number(mRTA) + " m ";
-            if(sRTA != 0)
-                timeRemaining += QString::number(sRTA) + " s";
+            timeRemaining += QString::number(sRTA) + " s";
             ui->RTA->setText(timeRemaining);
         }
 

@@ -19,4 +19,3 @@ void FinishWindow::on_close_clicked()
 {
     this->close();
 }
-
