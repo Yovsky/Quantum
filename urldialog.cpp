@@ -90,8 +90,7 @@ void urlDialog::on_buttonBox_accepted()
             window->setAttribute(Qt::WA_DeleteOnClose);
             window->show();
         }
-        if (msg.clickedButton() == No)
-            return;
+        return;
     }
     DownloadWindow *window = new DownloadWindow(nullptr);
     window->startDownload(address, savePath);
