@@ -29,3 +29,10 @@ void FinishWindow::on_openFolder_clicked()
     QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(path).absolutePath()));
 }
 
+
+void FinishWindow::on_open_clicked()
+{
+    this->close();
+    QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+}
+

@@ -20,6 +20,8 @@ private slots:
 
     void on_openFolder_clicked();
 
+    void on_open_clicked();
+
 private:
     Ui::FinishWindow *ui;
     QString path;
