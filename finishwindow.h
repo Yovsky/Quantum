@@ -22,6 +22,8 @@ private slots:
 
     void on_open_clicked();
 
+    void on_openWith_clicked();
+
 private:
     Ui::FinishWindow *ui;
     QString path;

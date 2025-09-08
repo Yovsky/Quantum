@@ -1,5 +1,6 @@
 QT       += core gui
 QT += network
+LIBS += -lShell32
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
