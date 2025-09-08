@@ -167,15 +167,18 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
     Status = (success)? "Completed." : "Failed.";
     ui->status->setText(Status);
     if (!success)
-        QMessageBox::critical(this, "Download Error", message);
-    else
     {
-        ui->progressBar->setValue(100);
-        QSystemTrayIcon tray;
-        tray.showMessage("QDMan", message);
+        QMessageBox::critical(this, "Download Error", message);
+        return;
     }
 
+    ui->progressBar->setValue(100);
+    QSystemTrayIcon tray;
+    tray.showMessage("QDMan", message);
+
     this->close();
+
+    emit DownloadInfo(QFileInfo(filePath).fileName() + "|" + Size + "Completed" + "|" + "|" + DownloadDate);
 
     FinishWindow finish(this, fileUrl, filePath);
     finish.exec();

@@ -18,8 +18,11 @@ public:
 private slots:
     void on_close_clicked();
 
+    void on_openFolder_clicked();
+
 private:
     Ui::FinishWindow *ui;
+    QString path;
 };
 
 #endif // FINISHWINDOW_H
