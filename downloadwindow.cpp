@@ -196,7 +196,7 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
 
     this->close();
 
-    emit DownloadInfo(QFileInfo(filePath).fileName() + "|" + Size + "Completed" + "|" + "|" + DownloadDate);
+    emit DownloadInfo(QFileInfo(filePath).fileName() + "|" + Size + "|" + "Completed" + "|" + "|" + DownloadDate);
 
     FinishWindow finish(this, fileUrl, filePath);
     finish.exec();

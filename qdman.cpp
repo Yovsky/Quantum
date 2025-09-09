@@ -45,17 +45,31 @@ QDMan::~QDMan()
 void QDMan::SetTable(QString Info)
 {
     QStringList parts = Info.split("|");
-    if (parts.size() == 5)
+    if (parts.size() != 5 || parts[0].isEmpty()) return;
+    if(downloadsList.contains(parts.first()))
     {
-        for(int i = 0; i < ui->tableWidget->rowCount(); i++)
-        {
-            QTableWidgetItem *item = ui->tableWidget->item(i, 0);
-            if (item && item->text() == parts[0])
-                return;
-        }
+        int row = downloadsList.value(parts[0]);
 
+        QTableWidgetItem *name = new QTableWidgetItem(parts[0]);
+        ui->tableWidget->setItem(row, 0, name);
+
+        QTableWidgetItem *size = new QTableWidgetItem(parts[1]);
+        ui->tableWidget->setItem(row, 1, size);
+
+        QTableWidgetItem *status = new QTableWidgetItem(parts[2]);
+        ui->tableWidget->setItem(row, 2, status);
+
+        QTableWidgetItem *transfer = new QTableWidgetItem(parts[3]);
+        ui->tableWidget->setItem(row, 3, transfer);
+
+        QTableWidgetItem *date = new QTableWidgetItem(parts[4]);
+        ui->tableWidget->setItem(row, 4, date);
+    }
+    else
+    {
         int row = ui->tableWidget->rowCount();
         ui->tableWidget->insertRow(row);
+        downloadsList.insert(parts[0], row);
 
         QTableWidgetItem *name = new QTableWidgetItem(parts[0]);
         ui->tableWidget->setItem(row, 0, name);

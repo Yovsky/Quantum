@@ -47,5 +47,6 @@ private slots:
 
 private:
     Ui::QDMan *ui;
+    QHash<QString, int> downloadsList;
 };
 #endif // QDMAN_H
