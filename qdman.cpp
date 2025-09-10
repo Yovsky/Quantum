@@ -21,14 +21,73 @@
 #include "downloadwindow.h"
 #include "ui_qdman.h"
 #include "urldialog.h"
+#include <QJsonArray>
 
 QDMan::QDMan(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::QDMan)
+    , m_settings("Yovsky", "QuantumDownloadManager")
 {
     ui->setupUi(this);
+
+    ui->tableWidget->setColumnCount(5);
+    ui->tableWidget->setHorizontalHeaderLabels({"Name", "Size", "Status", "Transfer", "Date"});
+
     AppGlobals::instance().setMainWindow(this);
+    LoadSettings();
     connect(&AppGlobals::instance(), &AppGlobals::downloadWindowCreated, this, &QDMan::onDownloadWindowCreated);
+}
+
+void QDMan::SaveSettings()
+{
+    QJsonArray jsonArray;
+
+    for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
+        QJsonArray jsonRow;
+        for (int j = 0; j < ui->tableWidget->columnCount(); j++) {
+            QTableWidgetItem *cell = ui->tableWidget->item(i, j);
+            jsonRow.append(cell ? cell->text() : "");
+        }
+        jsonArray.append(jsonRow);
+    }
+
+    QJsonDocument doc(jsonArray);
+    QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
+    m_settings.setValue("TableDataJson", jsonData);
+}
+
+void QDMan::LoadSettings()
+{
+    QByteArray jsonData = m_settings.value("TableDataJson").toByteArray();
+
+    if (jsonData.isEmpty())
+        return;
+
+    QJsonDocument doc = QJsonDocument::fromJson(jsonData);
+    if (doc.isNull())
+        return;
+    if (!doc.isArray())
+        return;
+
+    QJsonArray jsonArray = doc.array();
+
+    ui->tableWidget->setRowCount(0);
+
+    for (int i = 0; i < jsonArray.size(); i++) {
+        if (!jsonArray[i].isArray())
+            continue;
+
+        QJsonArray jsonRow = jsonArray[i].toArray();
+        QStringList items;
+
+        for (int j = 0; j < jsonRow.size(); j++) {
+            items.append(jsonRow[j].toString(""));
+        }
+
+        int row = ui->tableWidget->rowCount();
+        ui->tableWidget->insertRow(row);
+        InsertItems(items, row);
+    }
 }
 
 void QDMan::onDownloadWindowCreated(DownloadWindow *dw)
@@ -39,7 +98,16 @@ void QDMan::onDownloadWindowCreated(DownloadWindow *dw)
 
 QDMan::~QDMan()
 {
+    SaveSettings();
     delete ui;
+}
+
+void QDMan::InsertItems(QStringList items, int row)
+{
+    for (int col = 0; col < items.size() && col < ui->tableWidget->columnCount(); col++) {
+        QTableWidgetItem *item = new QTableWidgetItem(items[col]);
+        ui->tableWidget->setItem(row, col, item);
+    }
 }
 
 void QDMan::SetTable(QString Info)
@@ -50,20 +118,7 @@ void QDMan::SetTable(QString Info)
     {
         int row = downloadsList.value(parts[0]);
 
-        QTableWidgetItem *name = new QTableWidgetItem(parts[0]);
-        ui->tableWidget->setItem(row, 0, name);
-
-        QTableWidgetItem *size = new QTableWidgetItem(parts[1]);
-        ui->tableWidget->setItem(row, 1, size);
-
-        QTableWidgetItem *status = new QTableWidgetItem(parts[2]);
-        ui->tableWidget->setItem(row, 2, status);
-
-        QTableWidgetItem *transfer = new QTableWidgetItem(parts[3]);
-        ui->tableWidget->setItem(row, 3, transfer);
-
-        QTableWidgetItem *date = new QTableWidgetItem(parts[4]);
-        ui->tableWidget->setItem(row, 4, date);
+        InsertItems(parts, row);
     }
     else
     {
@@ -71,20 +126,7 @@ void QDMan::SetTable(QString Info)
         ui->tableWidget->insertRow(row);
         downloadsList.insert(parts[0], row);
 
-        QTableWidgetItem *name = new QTableWidgetItem(parts[0]);
-        ui->tableWidget->setItem(row, 0, name);
-
-        QTableWidgetItem *size = new QTableWidgetItem(parts[1]);
-        ui->tableWidget->setItem(row, 1, size);
-
-        QTableWidgetItem *status = new QTableWidgetItem(parts[2]);
-        ui->tableWidget->setItem(row, 2, status);
-
-        QTableWidgetItem *transfer = new QTableWidgetItem(parts[3]);
-        ui->tableWidget->setItem(row, 3, transfer);
-
-        QTableWidgetItem *date = new QTableWidgetItem(parts[4]);
-        ui->tableWidget->setItem(row, 4, date);
+        InsertItems(parts, row);
     }
 }
 

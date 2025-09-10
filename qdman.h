@@ -21,6 +21,7 @@
 
 #include "downloadwindow.h"
 #include <QMainWindow>
+#include <QSettings>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -35,6 +36,9 @@ class QDMan : public QMainWindow
 public:
     QDMan(QWidget *parent = nullptr);
     ~QDMan();
+    void LoadSettings();
+    void SaveSettings();
+    void InsertItems(QStringList items, int row);
 
 private slots:
     void onDownloadWindowCreated(DownloadWindow *dw);
@@ -48,5 +52,6 @@ private slots:
 private:
     Ui::QDMan *ui;
     QHash<QString, int> downloadsList;
+    QSettings m_settings;
 };
 #endif // QDMAN_H
