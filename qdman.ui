@@ -13,10 +13,20 @@
   <property name="windowTitle">
    <string>Quantum Download Manager</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+background: qlineargradient(spread:pad, x1:0, y1:0, x2:0.27, y2:1, stop:0 rgba(9, 31, 55, 255), stop:1 rgba(24, 22, 54, 255))
+}</string>
+  </property>
   <property name="unifiedTitleAndToolBarOnMac">
    <bool>false</bool>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true">QWidget {
+background: qlineargradient(spread:pad, x1:0, y1:0, x2:0.27, y2:1, stop:0 rgba(9, 31, 55, 255), stop:1 rgba(24, 22, 54, 255))
+}</string>
+   </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
      <widget class="QTableWidget" name="tableWidget">
@@ -25,6 +35,11 @@
         <width>626</width>
         <height>328</height>
        </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QWidget {
+background: qlineargradient(spread:pad, x1:0, y1:0, x2:0.27, y2:1, stop:0 rgba(9, 31, 55, 255), stop:1 rgba(24, 22, 54, 255))
+}</string>
       </property>
       <column>
        <property name="text">
@@ -84,7 +99,7 @@
     <string>toolBar</string>
    </property>
    <attribute name="toolBarArea">
-    <enum>LeftToolBarArea</enum>
+    <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
     <bool>false</bool>

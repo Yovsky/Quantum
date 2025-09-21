@@ -35,6 +35,10 @@ int main(int argc, char *argv[])
         }
     }
     QDMan w;
+    w.setStyleSheet("QMainWindow {"
+                          "background: qlineargradient(x1: 0.25, y1: 0, x2: 0, y2: 1,"
+                          "stop: 0 #212B45, stop: 1 #1E2329);"
+                          "}");
     w.show();
     return a.exec();
 }
