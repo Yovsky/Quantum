@@ -32,6 +32,7 @@ QDMan::QDMan(QWidget *parent)
 
     ui->tableWidget->setColumnCount(5);
     ui->tableWidget->setHorizontalHeaderLabels({"Name", "Size", "Status", "Transfer", "Date"});
+    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     AppGlobals::instance().setMainWindow(this);
     LoadSettings();
