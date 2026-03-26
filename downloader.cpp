@@ -28,6 +28,7 @@ Downloader::Downloader(QObject *parent) : QObject(parent)
 void Downloader::download(const QUrl &url, const QString &savePath)
 {
     file.setFileName(savePath);
+    currentSize = 0;
 
     if(!file.open(QIODevice::WriteOnly))
     {
@@ -48,7 +49,11 @@ void Downloader::download(const QUrl &url, const QString &savePath)
 void Downloader::onReadReady()
 {
     if (reply->bytesAvailable() > 0)
-        file.write(reply->readAll());
+    {
+        QByteArray data = reply->readAll();
+        currentSize += data.size();
+        file.write(data);
+    }
 }
 
 void Downloader::onDownloadFinished()
@@ -78,6 +83,5 @@ void Downloader::downloadStop()
 void Downloader::downloadPause()
 {
     reply->abort();
-    currentSize = file.size();
-    qDebug() << "pause working";
+    qDebug() << "pause working" + QString::number(currentSize);
 }
