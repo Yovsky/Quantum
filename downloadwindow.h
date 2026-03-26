@@ -42,8 +42,11 @@ private slots:
     void onProgressChange(qint64 bytesrecived, qint64 bytestotal);
     void onDownloadFinish(bool success, const QString &message);
     void downloadStop();
+    void downloadPause();
 
     void on_Cancel_clicked();
+
+    void on_Pause_clicked();
 
 signals:
     void DownloadInfo(QString Info);

@@ -32,6 +32,7 @@ public:
     explicit Downloader(QObject *parent = nullptr);
     void download(const QUrl &url, const QString &savePath);
     void downloadStop();
+    void downloadPause();
 signals:
     void downloadStarted();
     void progressChanged(qint64 bytesRecived, qint64 bytesTotal);
@@ -44,6 +45,7 @@ private:
     QNetworkReply *reply;
     QFile file;
     QUrl url;
+    qint64 currentSize;
 };
 
 #endif // DOWNLOADER_H

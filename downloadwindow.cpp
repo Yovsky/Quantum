@@ -207,6 +207,11 @@ void DownloadWindow::downloadStop()
     this->close();
 }
 
+void DownloadWindow::downloadPause()
+{
+    download->downloadPause();
+}
+
 DownloadWindow::~DownloadWindow()
 {
     delete ui;
@@ -215,5 +220,13 @@ DownloadWindow::~DownloadWindow()
 void DownloadWindow::on_Cancel_clicked()
 {
     downloadStop();
+}
+
+
+void DownloadWindow::on_Pause_clicked()
+{
+    //download->downloadStop();
+    downloadPause();
+    ui->Pause->setText("Resume");
 }
 

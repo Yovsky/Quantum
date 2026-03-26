@@ -74,3 +74,10 @@ void Downloader::downloadStop()
     file.remove();
     reply->deleteLater();
 }
+
+void Downloader::downloadPause()
+{
+    reply->abort();
+    currentSize = file.size();
+    qDebug() << "pause working";
+}
