@@ -23,6 +23,8 @@
 #include <QtNetwork/QNetworkReply>
 #include <QFile>
 #include <QUrl>
+#include <QTimer>
+#include <QDebug>
 
 class Downloader : public QObject
 {
@@ -33,6 +35,7 @@ public:
     void download(const QUrl &url, const QString &savePath);
     void downloadStop();
     void downloadPause();
+    void downloadResume(const QUrl &url, const QString &savePath);
 signals:
     void downloadStarted();
     void progressChanged(qint64 bytesRecived, qint64 bytesTotal);
@@ -45,7 +48,9 @@ private:
     QNetworkReply *reply;
     QFile file;
     QUrl url;
-    qint64 currentSize;
+    QString SavePath;
+    qint64 currentSize = 0;
+    bool isPausing = false;
 };
 
 #endif // DOWNLOADER_H

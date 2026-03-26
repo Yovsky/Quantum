@@ -19,6 +19,7 @@
 #include "downloader.h"
 #include <QtNetwork/QNetworkRequest>
 #include <QUrl>
+#include <QTimer>
 
 Downloader::Downloader(QObject *parent) : QObject(parent)
 {
@@ -28,7 +29,7 @@ Downloader::Downloader(QObject *parent) : QObject(parent)
 void Downloader::download(const QUrl &url, const QString &savePath)
 {
     file.setFileName(savePath);
-    currentSize = 0;
+    SavePath = savePath;
 
     if(!file.open(QIODevice::WriteOnly))
     {
@@ -37,6 +38,11 @@ void Downloader::download(const QUrl &url, const QString &savePath)
     }
 
     QNetworkRequest request(url);
+    if (currentSize != 0)
+    {
+        QByteArray rangeHeaderValue = "bytes=" + QByteArray::number(currentSize) + "-";
+        request.setRawHeader("Range", rangeHeaderValue);
+    }
     reply = manager->get(request);
 
     connect(reply, &QIODevice::readyRead, this, &Downloader::onReadReady);
@@ -58,30 +64,82 @@ void Downloader::onReadReady()
 
 void Downloader::onDownloadFinished()
 {
-    if (reply->error() != QNetworkReply::NoError)
-    {
-        file.remove();
-        emit downloadFinished(false, "Download not complete, error: " + reply->errorString());
-        reply->deleteLater();
+    QNetworkReply *senderReply = qobject_cast<QNetworkReply*>(sender());
+    if (!senderReply) return;
+
+    if (senderReply == reply) reply = nullptr;
+
+    QNetworkReply::NetworkError err = senderReply->error();
+
+    if (err == QNetworkReply::OperationCanceledError) {
+        if (isPausing) {
+            isPausing = false;
+            file.flush();
+            file.close();
+        }
+        senderReply->deleteLater();
         return;
     }
 
-    if (reply->bytesAvailable() > 0)
-        file.write(reply->readAll());
-    file.close();
+    if (err != QNetworkReply::NoError)
+    {
+        file.close();
+        emit downloadFinished(false, "Error: " + senderReply->errorString());
+    }
+    else
+    {
+        if (senderReply->bytesAvailable() > 0)
+            file.write(senderReply->readAll());
 
-    emit downloadFinished(true, "Download completed successfully.");
-    reply->deleteLater();
+        file.close();
+        emit downloadFinished(true, "Download completed successfully.");
+    }
+
+    senderReply->deleteLater();
 }
 
 void Downloader::downloadStop()
 {
+    isPausing = false;
+    if (reply)
+    {
+        QNetworkReply *r = reply;
+        reply = nullptr;
+        r->abort();
+        r->deleteLater();
+    }
+    if (file.isOpen()) file.close();
     file.remove();
-    reply->deleteLater();
 }
 
 void Downloader::downloadPause()
 {
+    if (!reply) return;
+    isPausing = true;
     reply->abort();
-    qDebug() << "pause working" + QString::number(currentSize);
+}
+
+void Downloader::downloadResume(const QUrl &url, const QString &savePath)
+{
+    file.setFileName(savePath);
+
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Append)) {
+        emit downloadFinished(false, "Can't open file for resume");
+        return;
+    }
+
+    qint64 existingSize = file.size();
+    currentSize = existingSize;
+
+    QNetworkRequest request(url);
+    QByteArray range = "bytes=" + QByteArray::number(existingSize) + "-";
+    request.setRawHeader("Range", range);
+
+    reply = manager->get(request);
+
+    connect(reply, &QIODevice::readyRead, this, &Downloader::onReadReady);
+    connect(reply, &QNetworkReply::finished, this, &Downloader::onDownloadFinished);
+    connect(reply, &QNetworkReply::downloadProgress, this, &Downloader::progressChanged);
+
+    emit downloadStarted();
 }

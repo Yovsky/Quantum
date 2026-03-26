@@ -23,6 +23,7 @@
 #include <QWidget>
 #include <QUrl>
 #include <QElapsedTimer>
+#include <QDebug>
 
 namespace Ui {
 class DownloadWindow;
@@ -42,7 +43,6 @@ private slots:
     void onProgressChange(qint64 bytesrecived, qint64 bytestotal);
     void onDownloadFinish(bool success, const QString &message);
     void downloadStop();
-    void downloadPause();
 
     void on_Cancel_clicked();
 
@@ -63,6 +63,7 @@ private:
     qint64 lastBytesReceived = 0;
     QTime lastUpdateTime;
     QString fileUrl;
+    bool isPaused = false;
 };
 
 #endif // DOWNLOADWINDOW_H

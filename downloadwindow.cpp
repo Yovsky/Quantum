@@ -42,23 +42,29 @@ DownloadWindow::DownloadWindow(QWidget *parent)
         Status = "Downloading...";
         ui->status->setText(Status);
     });
+
+    isPaused = false;
 }
 
 void DownloadWindow::startDownload(const QUrl &url, const QString &savePath)
 {
-    ui->adress->setText(url.toString());
+    QUrl finalUrl = QUrl::fromUserInput(url.toString());
+    if (finalUrl.scheme().isEmpty())
+        finalUrl.setScheme("http");
+
+    ui->adress->setText(finalUrl.toString());
     ui->progressBar->setValue(0);
     Status = "Starting Download...";
     ui->status->setText(Status);
 
-    fileUrl = url.toString();
+    fileUrl = finalUrl.toString();
     filePath = savePath;
 
     downloadTimer.start();
     lastBytesReceived = 0;
     DownloadDate = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
     lastUpdateTime = QTime::currentTime();
-    download->download(url, savePath);
+    download->download(finalUrl, savePath);
 }
 
 void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
@@ -101,17 +107,17 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
     {
         Size = QString::number(bytesTotal, 'f', 2) + " Bytes";
     }
-    else if (bytesTotal < std::pow(1024, 2))
+    else if (bytesTotal < 1024*1024)
     {
         Total = bytesTotal / 1024.0;
         Size = QString::number(Total, 'f', 2) + " KB";
     }
-    else if (bytesTotal < std::pow(1024, 3))
+    else if (bytesTotal < 1024*1024*1024)
     {
         Total = bytesTotal / (1024.0 * 1024.0);
         Size = QString::number(Total, 'f', 2) + " MB";
     }
-    else if (bytesTotal < std::pow(1024, 4))
+    else if (bytesTotal >= 1024*1024*1024)
     {
         Total = bytesTotal / (1024.0 * 1024.0 * 1024);
         Size = QString::number(Total, 'f', 2) + " GB";
@@ -131,7 +137,11 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
             Transfer = QString::number(instantSpeed, 'f', 2) + " MB/s";
             ui->transSpeed->setText(Transfer);
 
-            int sRTA = ((bytesTotal - bytesReceived) / (1024 * 1024)) / instantSpeed;
+            int sRTA = 0;
+            if (instantSpeed !=0)
+                sRTA = ((bytesTotal - bytesReceived) / (1024 * 1024)) / instantSpeed;
+            else
+                ui->RTA->setText("Unknown");
             int mRTA = 0;
             int hRTA = 0;
             while (sRTA >= 60)
@@ -181,6 +191,14 @@ void DownloadWindow::GatherDownloadInfo()
 
 void DownloadWindow::onDownloadFinish(bool success, const QString &message)
 {
+    qDebug() << "onDownloadFinish called — success:" << success << "msg:" << message << "isPaused:" << isPaused;
+
+    if (isPaused || message.contains("canceled", Qt::CaseInsensitive))
+    {
+        qDebug() << "Silently ignored error: " << message;
+        return;
+    }
+
     Status = (success)? "Completed." : "Failed.";
     ui->status->setText(Status);
     if (!success)
@@ -207,11 +225,6 @@ void DownloadWindow::downloadStop()
     this->close();
 }
 
-void DownloadWindow::downloadPause()
-{
-    download->downloadPause();
-}
-
 DownloadWindow::~DownloadWindow()
 {
     delete ui;
@@ -222,11 +235,21 @@ void DownloadWindow::on_Cancel_clicked()
     downloadStop();
 }
 
-
 void DownloadWindow::on_Pause_clicked()
 {
-    //download->downloadStop();
-    downloadPause();
-    ui->Pause->setText("Resume");
+    if (!isPaused)
+    {
+        isPaused = true;
+        download->downloadPause();
+        ui->Pause->setText("Resume");
+        Status = "Paused";
+    }
+    else
+    {
+        isPaused = false;
+        download->downloadResume(QUrl(fileUrl), filePath);
+        ui->Pause->setText("Pause");
+        Status = "Downloading...";
+    }
+    ui->status->setText(Status);
 }
-
