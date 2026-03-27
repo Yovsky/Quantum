@@ -34,6 +34,7 @@ DownloadWindow::DownloadWindow(QWidget *parent)
 {
     ui->setupUi(this);
     AppGlobals::instance().setDownloadWindow(this);
+    ui->adress->setReadOnly(true);
 
     connect(download, &Downloader::progressChanged, this, &DownloadWindow::onProgressChange);
     connect(download, &Downloader::downloadFinished, this, &DownloadWindow::onDownloadFinish);

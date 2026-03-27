@@ -230,6 +230,9 @@ font: bold 11px &quot;Lexend&quot;
       </property>
      </widget>
      <widget class="QLineEdit" name="adress">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>130</x>
@@ -243,6 +246,9 @@ font: bold 11px &quot;Lexend&quot;
 background: transparent;
 font: bold 11px &quot;Lexend&quot;
 }</string>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QLabel" name="label_6">
