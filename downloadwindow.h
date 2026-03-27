@@ -64,6 +64,9 @@ private:
     QTime lastUpdateTime;
     QString fileUrl;
     bool isPaused = false;
+    qint64 lastProgress = 0;
+    qint64 lastFileSize = 0;
+    qint64 lastDownloaded = 0;
 };
 
 #endif // DOWNLOADWINDOW_H

@@ -70,12 +70,15 @@ void DownloadWindow::startDownload(const QUrl &url, const QString &savePath)
 
 void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 {
+    lastDownloaded = bytesReceived + lastFileSize - bytesTotal;
+    if (bytesTotal < lastFileSize)  bytesTotal = lastFileSize;
+
     if (bytesTotal <= 0) {
-        ui->progressBar->setValue(0);
+        ui->progressBar->setValue(lastProgress);
         return;
     }
 
-    double progress = (static_cast<double>(bytesReceived) / bytesTotal) * 100.0;
+    double progress = (static_cast<double>(lastDownloaded) / bytesTotal) * 100.0;
     ui->progressBar->setValue(static_cast<int>(progress));
 
     double Received = 0;
@@ -83,23 +86,23 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
     QString Recmsg;
 
 
-    if(bytesReceived < 1024)
+    if(lastDownloaded < 1024)
     {
-        Recmsg = QString::number(bytesReceived, 'f', 2) + " Bytes";
+        Recmsg = QString::number(lastDownloaded, 'f', 2) + " Bytes";
     }
-    else if (bytesReceived < std::pow(1024, 2))
+    else if (lastDownloaded < 1024.0 * 1024.0)
     {
-        Received = bytesReceived / 1024.0;
+        Received = lastDownloaded / 1024.0;
         Recmsg = QString::number(Received, 'f', 2) + " KB";
     }
-    else if (bytesReceived < std::pow(1024, 3))
+    else if (lastDownloaded < (1024.0 * 1024.0 * 1024))
     {
-        Received = bytesReceived / (1024.0 * 1024.0);
+        Received = lastDownloaded / (1024.0 * 1024.0);
         Recmsg = QString::number(Received, 'f', 2) + " MB";
     }
-    else if (bytesReceived < std::pow(1024, 4))
+    else if (lastDownloaded > (1024.0 * 1024.0 * 1024))
     {
-        Received = bytesReceived / (1024.0 * 1024.0 * 1024);
+        Received = lastDownloaded / (1024.0 * 1024.0 * 1024);
         Recmsg = QString::number(Received, 'f', 2) + " GB";
     }
 
@@ -128,7 +131,7 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
     int elapsedMs = lastUpdateTime.msecsTo(currentTime);
 
 
-    if (elapsedMs > 500) { // Update speed every 100ms for stability
+    if (elapsedMs > 500) {
         qint64 bytesSinceLast = bytesReceived - lastBytesReceived;
         double mbSinceLast = bytesSinceLast / (1024.0 * 1024.0);
         double secondsSinceLast = elapsedMs / 1000.0;
@@ -178,6 +181,8 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
     } else {
         ui->fileSize->setText("Unknown");
     }
+
+    if (bytesTotal != lastFileSize) lastFileSize = bytesTotal;
 }
 
 void DownloadWindow::GatherDownloadInfo()
@@ -244,6 +249,8 @@ void DownloadWindow::on_Pause_clicked()
         download->downloadPause();
         ui->Pause->setText("Resume");
         Status = "Paused";
+        lastProgress = ui->progressBar->value();
+
     }
     else
     {

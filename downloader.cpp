@@ -38,11 +38,6 @@ void Downloader::download(const QUrl &url, const QString &savePath)
     }
 
     QNetworkRequest request(url);
-    if (currentSize != 0)
-    {
-        QByteArray rangeHeaderValue = "bytes=" + QByteArray::number(currentSize) + "-";
-        request.setRawHeader("Range", rangeHeaderValue);
-    }
     reply = manager->get(request);
 
     connect(reply, &QIODevice::readyRead, this, &Downloader::onReadReady);
