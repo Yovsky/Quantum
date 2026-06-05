@@ -137,7 +137,6 @@ void QDMan::SetTable(const DownloadStatus &Info)
         ui->downloadsLayout->addWidget(downloadInfo);
         downloadsList.insert(Info.fileName, downloadInfo);
     }
-
 }
 
 void QDMan::on_actionAdd_New_Download_triggered()

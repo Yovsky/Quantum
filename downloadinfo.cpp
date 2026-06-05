@@ -36,7 +36,7 @@ void DownloadInfo::UpdateInfo(const DownloadStatus &Info)
     if (Info.fileName.isEmpty()) return;
 
     ui->fileName->setText(Info.fileName);
-    ui->size->setText(Info.fileSize);
+    ui->size->setText(Info.currentSize + "/" + Info.fileSize);
     ui->speed->setText(Info.speed);
     ui->percentage->setText(QString::number(Info.progress, 'f', 0) + "%");
     ui->progressBar->setValue(static_cast<int>(Info.progress));

@@ -83,8 +83,6 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 
     double Received = 0;
     double Total = 0;
-    QString Recmsg;
-
 
     if(lastDownloaded < 1024)
     {
@@ -202,6 +200,7 @@ void DownloadWindow::GatherDownloadInfo()
     Info.Date = DownloadDate;
     Info.progress = Progress;
     Info.status = Status;
+    Info.currentSize = Recmsg;
 
     emit DownloadInfo(Info);
 }
@@ -237,6 +236,7 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
     Info.Date = DownloadDate;
     Info.progress = Progress;
     Info.status = "Completed";
+    Info.currentSize = Recmsg;
 
     emit DownloadInfo(Info);
 
