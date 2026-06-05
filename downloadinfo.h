@@ -12,10 +12,11 @@ class DownloadInfo : public QWidget
     Q_OBJECT
 
 public:
-    explicit DownloadInfo(QWidget *parent, QString Type, QString Info);
+    explicit DownloadInfo(QWidget *parent, QString Info);
     void Downloading(QString Data);
     void Paused(QString Data);
     void Finished(QString Data);
+    void UpdateInfo(QString Info);
     ~DownloadInfo();
 
 private:

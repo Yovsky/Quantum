@@ -29,48 +29,31 @@ background: qlineargradient(spread:pad, x1:0, y1:0, x2:0.27, y2:1, stop:0 rgba(9
    </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QTableWidget" name="tableWidget">
-      <property name="maximumSize">
-       <size>
-        <width>626</width>
-        <height>328</height>
-       </size>
+     <widget class="QScrollArea" name="scrollArea">
+      <property name="widgetResizable">
+       <bool>true</bool>
       </property>
-      <property name="styleSheet">
-       <string notr="true">QWidget {
-background: qlineargradient(spread:pad, x1:0, y1:0, x2:0.27, y2:1, stop:0 rgba(9, 31, 55, 255), stop:1 rgba(24, 22, 54, 255))
-}</string>
-      </property>
-      <column>
-       <property name="text">
-        <string>File Name</string>
+      <widget class="QWidget" name="scrollAreaWidgetContents">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>664</width>
+         <height>287</height>
+        </rect>
        </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Size</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Status</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Transfer Rate</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Download Date</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Path</string>
-       </property>
-      </column>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QWidget" name="downloadsContainer" native="true">
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="0" column="0">
+            <layout class="QVBoxLayout" name="downloadsLayout"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>

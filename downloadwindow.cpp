@@ -142,7 +142,7 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
             ui->transSpeed->setText(Transfer);
 
             int sRTA = 0;
-            if (instantSpeed !=0)
+            if (instantSpeed != 0)
                 sRTA = ((bytesTotal - bytesReceived) / (1024 * 1024)) / instantSpeed;
             else
                 ui->RTA->setText("Unknown");

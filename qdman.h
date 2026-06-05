@@ -20,6 +20,7 @@
 */
 
 #include "downloadwindow.h"
+#include "downloadinfo.h"
 #include <QMainWindow>
 #include <QSettings>
 
@@ -51,7 +52,7 @@ private slots:
 
 private:
     Ui::QDMan *ui;
-    QHash<QString, int> downloadsList;
+    QHash<QString, DownloadInfo*> downloadsList;
     QSettings m_settings;
 };
 #endif // QDMAN_H
