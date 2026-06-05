@@ -118,7 +118,7 @@ void QDMan::InsertItems(QStringList items, int row)
 void QDMan::SetTable(QString Info)
 {
     QStringList parts = Info.split("|");
-    if (parts.size() != 5 || parts[0].isEmpty()) return;
+    if (parts.size() != 6 || parts[0].isEmpty()) return;
     if(downloadsList.contains(parts[0]))
     {
         // int row = downloadsList.value(parts[0]);

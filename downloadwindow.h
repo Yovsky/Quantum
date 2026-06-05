@@ -59,6 +59,7 @@ private:
     QString Transfer;
     QString Size;
     QString DownloadDate;
+    double Progress;
     QElapsedTimer downloadTimer;
     qint64 lastBytesReceived = 0;
     QTime lastUpdateTime;

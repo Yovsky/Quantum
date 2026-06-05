@@ -32,12 +32,18 @@ void DownloadInfo::Finished(QString Data)
 
 void DownloadInfo::UpdateInfo(QString Info)
 {
+    qDebug() << Info;
+
     QStringList parts = Info.split('|');
-    if (parts.isEmpty() || parts[0].isEmpty()) return;
+    if (parts.isEmpty() || parts[0].isEmpty() || parts.size() != 6) return;
+
+    qDebug() << parts;
+    qDebug() << parts.size();
 
     ui->fileName->setText(parts[0]);
     ui->size->setText(parts[1]);
     ui->speed->setText(parts[3]);
+    ui->percentage->setText(parts[5] + "%");
 }
 
 DownloadInfo::~DownloadInfo()

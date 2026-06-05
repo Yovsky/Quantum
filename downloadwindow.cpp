@@ -78,8 +78,8 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
         return;
     }
 
-    double progress = (static_cast<double>(lastDownloaded) / bytesTotal) * 100.0;
-    ui->progressBar->setValue(static_cast<int>(progress));
+    Progress = (static_cast<double>(lastDownloaded) / bytesTotal) * 100.0;
+    ui->progressBar->setValue(static_cast<int>(Progress));
 
     double Received = 0;
     double Total = 0;
@@ -191,7 +191,8 @@ void DownloadWindow::GatherDownloadInfo()
     Info += Size + "|";
     Info += Status + "|";
     Info += Transfer + "|";
-    Info += DownloadDate;
+    Info += DownloadDate + "|";
+    Info += QString::number(Progress, 'f', 0);
     emit DownloadInfo(Info);
 }
 
@@ -219,7 +220,7 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
 
     this->close();
 
-    emit DownloadInfo(QFileInfo(filePath).fileName() + "|" + Size + "|" + "Completed" + "|" + "|" + DownloadDate);
+    emit DownloadInfo(QFileInfo(filePath).fileName() + "|" + Size + "|" + "Completed" + "|" + "|" + DownloadDate + "|" + QString::number(Progress, 'f', 0));
 
     FinishWindow finish(this, fileUrl, filePath);
     finish.exec();
