@@ -18,6 +18,7 @@
 
 #include "qdman.h"
 #include "appglobals.h"
+#include "downloadinfo.h"
 #include "downloadwindow.h"
 #include "ui_qdman.h"
 #include "urldialog.h"
@@ -29,10 +30,11 @@ QDMan::QDMan(QWidget *parent)
     , m_settings("Yovsky", "QuantumDownloadManager")
 {
     ui->setupUi(this);
+    ui->downloadsLayout->setAlignment(Qt::AlignTop);
 
-    ui->tableWidget->setColumnCount(5);
-    ui->tableWidget->setHorizontalHeaderLabels({"Name", "Size", "Status", "Transfer", "Date"});
-    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    // ui->tableWidget->setColumnCount(5);
+    // ui->tableWidget->setHorizontalHeaderLabels({"Name", "Size", "Status", "Transfer", "Date"});
+    // ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     AppGlobals::instance().setMainWindow(this);
     LoadSettings();
@@ -43,14 +45,14 @@ void QDMan::SaveSettings()
 {
     QJsonArray jsonArray;
 
-    for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
-        QJsonArray jsonRow;
-        for (int j = 0; j < ui->tableWidget->columnCount(); j++) {
-            QTableWidgetItem *cell = ui->tableWidget->item(i, j);
-            jsonRow.append(cell ? cell->text() : "");
-        }
-        jsonArray.append(jsonRow);
-    }
+    // for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
+    //     QJsonArray jsonRow;
+    //     for (int j = 0; j < ui->tableWidget->columnCount(); j++) {
+    //         QTableWidgetItem *cell = ui->tableWidget->item(i, j);
+    //         jsonRow.append(cell ? cell->text() : "");
+    //     }
+    //     jsonArray.append(jsonRow);
+    // }
 
     QJsonDocument doc(jsonArray);
     QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
@@ -72,7 +74,7 @@ void QDMan::LoadSettings()
 
     QJsonArray jsonArray = doc.array();
 
-    ui->tableWidget->setRowCount(0);
+    // ui->tableWidget->setRowCount(0);
 
     for (int i = 0; i < jsonArray.size(); i++) {
         if (!jsonArray[i].isArray())
@@ -85,16 +87,18 @@ void QDMan::LoadSettings()
             items.append(jsonRow[j].toString(""));
         }
 
-        int row = ui->tableWidget->rowCount();
-        ui->tableWidget->insertRow(row);
-        InsertItems(items, row);
+        // int row = ui->tableWidget->rowCount();
+        // ui->tableWidget->insertRow(row);
+        // InsertItems(items, row);
     }
 }
 
 void QDMan::onDownloadWindowCreated(DownloadWindow *dw)
 {
     if (dw)
+    {
         connect(dw, &DownloadWindow::DownloadInfo, this, &QDMan::SetTable);
+    }
 }
 
 QDMan::~QDMan()
@@ -105,29 +109,33 @@ QDMan::~QDMan()
 
 void QDMan::InsertItems(QStringList items, int row)
 {
-    for (int col = 0; col < items.size() && col < ui->tableWidget->columnCount(); col++) {
-        QTableWidgetItem *item = new QTableWidgetItem(items[col]);
-        ui->tableWidget->setItem(row, col, item);
-    }
+    // for (int col = 0; col < items.size() && col < ui->tableWidget->columnCount(); col++) {
+    //     QTableWidgetItem *item = new QTableWidgetItem(items[col]);
+    //     ui->tableWidget->setItem(row, col, item);
+    // }
 }
 
-void QDMan::SetTable(QString Info)
+void QDMan::SetTable(const DownloadStatus &Info)
 {
-    QStringList parts = Info.split("|");
-    if (parts.size() != 5 || parts[0].isEmpty()) return;
-    if(downloadsList.contains(parts.first()))
+    // QStringList parts = Info.split("|");
+    // if (parts.size() != 6 || parts[0].isEmpty()) return;
+    if(downloadsList.contains(Info.fileName))
     {
-        int row = downloadsList.value(parts[0]);
+        // int row = downloadsList.value(parts[0]);
+        // InsertItems(parts, row);
 
-        InsertItems(parts, row);
+        downloadsList[Info.fileName]->UpdateInfo(Info);
     }
     else
     {
-        int row = ui->tableWidget->rowCount();
-        ui->tableWidget->insertRow(row);
-        downloadsList.insert(parts[0], row);
+        // int row = ui->tableWidget->rowCount();
+        // ui->tableWidget->insertRow(row);
+        // downloadsList.insert(parts[0], row);
 
-        InsertItems(parts, row);
+        auto* downloadInfo = new DownloadInfo(nullptr);
+        downloadInfo->UpdateInfo(Info);
+        ui->downloadsLayout->addWidget(downloadInfo);
+        downloadsList.insert(Info.fileName, downloadInfo);
     }
 }
 

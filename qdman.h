@@ -20,6 +20,8 @@
 */
 
 #include "downloadwindow.h"
+#include "downloadinfo.h"
+#include "downloadstatus.h"
 #include <QMainWindow>
 #include <QSettings>
 
@@ -44,14 +46,14 @@ private slots:
     void onDownloadWindowCreated(DownloadWindow *dw);
 
 public slots:
-    void SetTable(QString Info);
+    void SetTable(const DownloadStatus& Info);
 
 private slots:
     void on_actionAdd_New_Download_triggered();
 
 private:
     Ui::QDMan *ui;
-    QHash<QString, int> downloadsList;
+    QHash<QString, DownloadInfo*> downloadsList;
     QSettings m_settings;
 };
 #endif // QDMAN_H

@@ -78,13 +78,11 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
         return;
     }
 
-    double progress = (static_cast<double>(lastDownloaded) / bytesTotal) * 100.0;
-    ui->progressBar->setValue(static_cast<int>(progress));
+    Progress = (static_cast<double>(lastDownloaded) / bytesTotal) * 100.0;
+    ui->progressBar->setValue(static_cast<int>(Progress));
 
     double Received = 0;
     double Total = 0;
-    QString Recmsg;
-
 
     if(lastDownloaded < 1024)
     {
@@ -142,7 +140,7 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
             ui->transSpeed->setText(Transfer);
 
             int sRTA = 0;
-            if (instantSpeed !=0)
+            if (instantSpeed != 0)
                 sRTA = ((bytesTotal - bytesReceived) / (1024 * 1024)) / instantSpeed;
             else
                 ui->RTA->setText("Unknown");
@@ -187,11 +185,23 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 
 void DownloadWindow::GatherDownloadInfo()
 {
-    QString Info = QFileInfo(filePath).fileName() + "|";
-    Info += Size + "|";
-    Info += Status + "|";
-    Info += Transfer + "|";
-    Info += DownloadDate;
+    // QString Info = QFileInfo(filePath).fileName() + "|";
+    // Info += Size + "|";
+    // Info += Status + "|";
+    // Info += Transfer + "|";
+    // Info += DownloadDate + "|";
+    // Info += QString::number(Progress, 'f', 0);
+
+    DownloadStatus Info;
+
+    Info.fileName = QFileInfo(filePath).fileName();
+    Info.fileSize = Size;
+    Info.speed = Transfer;
+    Info.Date = DownloadDate;
+    Info.progress = Progress;
+    Info.status = Status;
+    Info.currentSize = Recmsg;
+
     emit DownloadInfo(Info);
 }
 
@@ -219,7 +229,16 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
 
     this->close();
 
-    emit DownloadInfo(QFileInfo(filePath).fileName() + "|" + Size + "|" + "Completed" + "|" + "|" + DownloadDate);
+    DownloadStatus Info;
+
+    Info.fileName = QFileInfo(filePath).fileName();
+    Info.fileSize = Size;
+    Info.Date = DownloadDate;
+    Info.progress = Progress;
+    Info.status = "Completed";
+    Info.currentSize = Recmsg;
+
+    emit DownloadInfo(Info);
 
     FinishWindow finish(this, fileUrl, filePath);
     finish.exec();
