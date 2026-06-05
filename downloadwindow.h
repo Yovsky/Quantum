@@ -20,6 +20,7 @@
 */
 
 #include "downloader.h"
+#include "downloadstatus.h"
 #include <QWidget>
 #include <QUrl>
 #include <QElapsedTimer>
@@ -49,7 +50,7 @@ private slots:
     void on_Pause_clicked();
 
 signals:
-    void DownloadInfo(QString Info);
+    void DownloadInfo(const DownloadStatus& Info);
 
 private:
     Ui::DownloadWindow *ui;

@@ -24,6 +24,7 @@ HEADERS += \
     appglobals.h \
     downloader.h \
     downloadinfo.h \
+    downloadstatus.h \
     downloadwindow.h \
     finishwindow.h \
     qdman.h \

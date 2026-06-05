@@ -115,16 +115,16 @@ void QDMan::InsertItems(QStringList items, int row)
     // }
 }
 
-void QDMan::SetTable(QString Info)
+void QDMan::SetTable(const DownloadStatus &Info)
 {
-    QStringList parts = Info.split("|");
-    if (parts.size() != 6 || parts[0].isEmpty()) return;
-    if(downloadsList.contains(parts[0]))
+    // QStringList parts = Info.split("|");
+    // if (parts.size() != 6 || parts[0].isEmpty()) return;
+    if(downloadsList.contains(Info.fileName))
     {
         // int row = downloadsList.value(parts[0]);
         // InsertItems(parts, row);
 
-        downloadsList[parts[0]]->UpdateInfo(Info);
+        downloadsList[Info.fileName]->UpdateInfo(Info);
     }
     else
     {
@@ -132,10 +132,10 @@ void QDMan::SetTable(QString Info)
         // ui->tableWidget->insertRow(row);
         // downloadsList.insert(parts[0], row);
 
-        auto* downloadInfo = new DownloadInfo(nullptr, Info);
+        auto* downloadInfo = new DownloadInfo(nullptr);
         downloadInfo->UpdateInfo(Info);
         ui->downloadsLayout->addWidget(downloadInfo);
-        downloadsList.insert(parts[0], downloadInfo);
+        downloadsList.insert(Info.fileName, downloadInfo);
     }
 
 }

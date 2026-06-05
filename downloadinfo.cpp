@@ -1,7 +1,7 @@
 #include "downloadinfo.h"
 #include "ui_downloadinfo.h"
 
-DownloadInfo::DownloadInfo(QWidget *parent, QString Info)
+DownloadInfo::DownloadInfo(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::DownloadInfo)
 {
@@ -30,20 +30,16 @@ void DownloadInfo::Finished(QString Data)
 
 }
 
-void DownloadInfo::UpdateInfo(QString Info)
+void DownloadInfo::UpdateInfo(const DownloadStatus &Info)
 {
-    qDebug() << Info;
+    // QStringList parts = Info.split('|');
+    if (Info.fileName.isEmpty()) return;
 
-    QStringList parts = Info.split('|');
-    if (parts.isEmpty() || parts[0].isEmpty() || parts.size() != 6) return;
-
-    qDebug() << parts;
-    qDebug() << parts.size();
-
-    ui->fileName->setText(parts[0]);
-    ui->size->setText(parts[1]);
-    ui->speed->setText(parts[3]);
-    ui->percentage->setText(parts[5] + "%");
+    ui->fileName->setText(Info.fileName);
+    ui->size->setText(Info.fileSize);
+    ui->speed->setText(Info.speed);
+    ui->percentage->setText(QString::number(Info.progress, 'f', 0) + "%");
+    ui->progressBar->setValue(static_cast<int>(Info.progress));
 }
 
 DownloadInfo::~DownloadInfo()

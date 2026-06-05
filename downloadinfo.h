@@ -1,6 +1,7 @@
 #ifndef DOWNLOADINFO_H
 #define DOWNLOADINFO_H
 
+#include "downloadstatus.h"
 #include <QWidget>
 
 namespace Ui {
@@ -12,11 +13,11 @@ class DownloadInfo : public QWidget
     Q_OBJECT
 
 public:
-    explicit DownloadInfo(QWidget *parent, QString Info);
+    explicit DownloadInfo(QWidget *parent);
     void Downloading(QString Data);
     void Paused(QString Data);
     void Finished(QString Data);
-    void UpdateInfo(QString Info);
+    void UpdateInfo(const DownloadStatus &Info);
     ~DownloadInfo();
 
 private:
