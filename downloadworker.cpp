@@ -6,13 +6,14 @@ DownloadWorker::DownloadWorker(const QUrl &url, qint64 start, qint64 end, const 
 void DownloadWorker::StartDownload()
 {
     m_file.setFileName(m_tempPath);
-    if(!m_file.open(QIODevice::WriteOnly))
+    if(!m_file.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
         emit ErrorOcc(m_file.errorString());
         return;
     }
 
-    manager = new QNetworkAccessManager(this);
+    if (!manager)
+        manager = new QNetworkAccessManager(this);
     QNetworkRequest request(m_url);
 
     QByteArray rangeHeader = "bytes=" + QByteArray::number(m_start) + "-" + QByteArray::number(m_end);
@@ -33,11 +34,31 @@ void DownloadWorker::OnReadReady()
 
 void DownloadWorker::OnReplyFinished()
 {
-    m_file.flush();
+    auto error = reply->error();
     m_file.close();
+    QString errorStr = reply->errorString();
+    int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    reply->deleteLater();
+    reply = nullptr;
 
-    if(reply->error() != QNetworkReply::NoError)
-        emit ErrorOcc(reply->errorString());
+
+    if(error != QNetworkReply::NoError)
+    {
+        if (retryCount < retryMax)
+        {
+            retryCount++;
+            StartDownload();
+            return;
+        }
+        emit ErrorOcc(errorStr);
+    }
+    else if (status != 206)
+    {
+        emit ErrorOcc("Server ignored range request");
+    }
     else
-        emit Finished();
+    {
+        retryCount = 0;
+        emit Finished();    
+    }
 }

@@ -47,6 +47,7 @@ signals:
     void downloadFinished(bool success, const QString &message);
 private slots:
     void onHeadFinished();
+    void onHeadTestFinished();
     void onChunkProgress(qint64 bytes);
     void onChunkFinished();
     void onReadReady();

@@ -22,6 +22,8 @@ private:
     qint64 m_end;
     QString m_tempPath;
     QFile m_file;
+    int retryCount = 0;
+    int retryMax = 3;
 
     QNetworkAccessManager *manager = nullptr;
     QNetworkReply *reply = nullptr;
