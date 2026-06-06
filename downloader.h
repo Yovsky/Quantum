@@ -19,12 +19,15 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "downloadworker.h"
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>
+#include <QNetworkRequest>
 #include <QFile>
 #include <QUrl>
 #include <QTimer>
 #include <QDebug>
+#include <QThread>
 
 class Downloader : public QObject
 {
@@ -32,7 +35,8 @@ class Downloader : public QObject
 
 public:
     explicit Downloader(QObject *parent = nullptr);
-    void download(const QUrl &url, const QString &savePath);
+    void download(const QUrl &url, const QString &savePath, int chunkNumber);
+    void SetupWorkers();
     void downloadStop();
     void downloadPause();
     void downloadResume(const QUrl &url, const QString &savePath);
@@ -41,16 +45,25 @@ signals:
     void progressChanged(qint64 bytesRecived, qint64 bytesTotal);
     void downloadFinished(bool success, const QString &message);
 private slots:
+    void onHeadFinished();
+    void onChunkProgress(qint64 bytes);
+    void onChunkFinished();
     void onReadReady();
     void onDownloadFinished();
 private:
+    void mergeTemporaryFiles();
     QNetworkAccessManager *manager;
     QNetworkReply *reply;
     QFile file;
-    QUrl url;
-    QString SavePath;
+    QUrl m_url;
+    QString m_savePath;
+    int m_chunkNumber;
+    int m_chunksCompleted;
+    qint64 m_filesize;
+    qint64 m_bytesDownloaded;
     qint64 currentSize = 0;
     bool isPausing = false;
+    QStringList m_tempPaths;
 };
 
 #endif // DOWNLOADER_H

@@ -38,6 +38,12 @@ urlDialog::~urlDialog()
 
 void urlDialog::on_buttonBox_accepted()
 {
+    int threadNumber = 8;
+    if (ui->threadNumber->currentIndex() == 0) threadNumber = 1;
+    if (ui->threadNumber->currentIndex() == 1) threadNumber = 2;
+    if (ui->threadNumber->currentIndex() == 2) threadNumber = 4;
+    if (ui->threadNumber->currentIndex() == 4) threadNumber = 16;
+
     QString urlText = ui->Url->text().trimmed();
 
     QUrl address(urlText);
@@ -86,14 +92,15 @@ void urlDialog::on_buttonBox_accepted()
         if (msg.clickedButton() == Yes)
         {
             DownloadWindow *window = new DownloadWindow(nullptr);
-            window->startDownload(address, savePath);
+            window->startDownload(address, savePath, threadNumber);
             window->setAttribute(Qt::WA_DeleteOnClose);
             window->show();
         }
         return;
     }
+
     DownloadWindow *window = new DownloadWindow(nullptr);
-    window->startDownload(address, savePath);
+    window->startDownload(address, savePath, threadNumber);
     window->setAttribute(Qt::WA_DeleteOnClose);
     window->show();
 }

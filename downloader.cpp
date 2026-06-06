@@ -26,25 +26,111 @@ Downloader::Downloader(QObject *parent) : QObject(parent)
     manager = new QNetworkAccessManager(this);
 }
 
-void Downloader::download(const QUrl &url, const QString &savePath)
+void Downloader::download(const QUrl &url, const QString &savePath, int chunkNumber)
 {
-    file.setFileName(savePath);
-    SavePath = savePath;
+    // file.setFileName(savePath);
+    // SavePath = savePath;
 
-    if(!file.open(QIODevice::WriteOnly))
+    // if(!file.open(QIODevice::WriteOnly))
+    // {
+    //     emit downloadFinished(false, "File not downloaded, error: " + file.errorString());
+    //     return;
+    // }
+
+    // QNetworkRequest request(url);
+    // reply = manager->get(request);
+
+    // connect(reply, &QIODevice::readyRead, this, &Downloader::onReadReady);
+    // connect(reply, &QNetworkReply::finished, this, &Downloader::onDownloadFinished);
+    // connect(reply, &QNetworkReply::downloadProgress, this, &Downloader::progressChanged);
+
+    // emit downloadStarted();
+
+    m_savePath = savePath;
+    m_url = QUrl(url);
+    m_chunkNumber = chunkNumber;
+    m_chunksCompleted = 0;
+    m_bytesDownloaded = 0;
+    m_tempPaths.clear();
+
+    QNetworkRequest request(m_url);
+    QNetworkReply *reply = manager->head(request);
+    connect (reply, &QNetworkReply::finished, this, &Downloader::onHeadFinished);
+}
+
+void Downloader::onHeadFinished()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    if (!reply) return;
+    reply->deleteLater();
+    if (reply->error() != QNetworkReply::NoError)
     {
-        emit downloadFinished(false, "File not downloaded, error: " + file.errorString());
+        qDebug() << "Failed to contact target host server:" << reply->errorString();
+        return;
+    }
+    m_filesize = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
+    SetupWorkers();
+}
+
+void Downloader::SetupWorkers()
+{
+    qint64 chunkSize = m_filesize / m_chunkNumber;
+    for (int i = 0; i < m_chunkNumber; i++)
+    {
+        qint64 start = i * chunkSize;
+        qint64 end = (i == m_chunkNumber - 1) ? m_filesize - 1 : start + chunkSize - 1;
+
+        QString tempPath = m_savePath + QString("qdm%1").arg(i);
+        m_tempPaths.append(tempPath);
+        QFile::remove(tempPath);
+
+        QThread *workerThread = new QThread(this);
+        DownloadWorker *worker = new DownloadWorker(m_url, start, end, tempPath);
+        worker->moveToThread(workerThread);
+
+        connect(workerThread, &QThread::started, worker, &::DownloadWorker::StartDownload);
+        connect(worker, &::DownloadWorker::Finished, workerThread, &QThread::quit);
+        connect(worker, &::DownloadWorker::Finished, worker, &DownloadWorker::deleteLater);
+        connect(workerThread, &QThread::finished, workerThread, &QThread::deleteLater);
+
+        connect(worker, &::DownloadWorker::Progress, this, &Downloader::onChunkProgress);
+        connect(worker, &::DownloadWorker::Finished, this, &Downloader::onChunkFinished);
+
+        workerThread->start();
+    }
+}
+
+void Downloader::onChunkProgress(qint64 bytes) {
+    m_bytesDownloaded += bytes;
+    emit progressChanged(m_bytesDownloaded, m_filesize);
+}
+
+void Downloader::onChunkFinished() {
+    m_chunksCompleted++;
+    if (m_chunksCompleted == m_chunkNumber) {
+        mergeTemporaryFiles();
+    }
+}
+
+void Downloader::mergeTemporaryFiles() {
+    QFile finalFile(m_savePath);
+    if (!finalFile.open(QIODevice::WriteOnly)) {
+        qDebug() << "Cannot compile output file target assembly footprint.";
         return;
     }
 
-    QNetworkRequest request(url);
-    reply = manager->get(request);
+    for (const QString &tempPath : m_tempPaths) {
+        QFile tempFile(tempPath);
+        if (tempFile.open(QIODevice::ReadOnly)) {
+            finalFile.write(tempFile.readAll());
+            tempFile.close();
+            QFile::remove(tempPath);
+        }
+    }
 
-    connect(reply, &QIODevice::readyRead, this, &Downloader::onReadReady);
-    connect(reply, &QNetworkReply::finished, this, &Downloader::onDownloadFinished);
-    connect(reply, &QNetworkReply::downloadProgress, this, &Downloader::progressChanged);
-
-    emit downloadStarted();
+    finalFile.close();
+    qDebug() << "Download completed successfully!";
+    emit downloadFinished(true, "Download completed successfully.");
 }
 
 void Downloader::onReadReady()

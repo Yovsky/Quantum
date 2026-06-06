@@ -47,7 +47,7 @@ DownloadWindow::DownloadWindow(QWidget *parent)
     isPaused = false;
 }
 
-void DownloadWindow::startDownload(const QUrl &url, const QString &savePath)
+void DownloadWindow::startDownload(const QUrl &url, const QString &savePath, int threadNumber)
 {
     QUrl finalUrl = QUrl::fromUserInput(url.toString());
     if (finalUrl.scheme().isEmpty())
@@ -65,7 +65,7 @@ void DownloadWindow::startDownload(const QUrl &url, const QString &savePath)
     lastBytesReceived = 0;
     DownloadDate = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
     lastUpdateTime = QTime::currentTime();
-    download->download(finalUrl, savePath);
+    download->download(finalUrl, savePath, threadNumber);
 }
 
 void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
