@@ -69,6 +69,31 @@ void Downloader::onHeadFinished()
         return;
     }
     m_filesize = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
+    if (m_filesize <= 0) m_chunkNumber = 1;
+    if (m_filesize < 1024 * 1024 * 10) m_chunkNumber = 1;
+
+    QByteArray acceptRanges = reply->rawHeader("Accept-Ranges");
+    if (acceptRanges.toLower().contains("bytes") || m_chunkNumber == 1)
+        SetupWorkers();
+    else
+    {
+        QNetworkRequest request(m_url);
+        QByteArray rangeHeader = "bytes=0-0";
+        request.setRawHeader("Range", rangeHeader);
+        QNetworkReply *test = manager->get(request);
+        connect (test, &QNetworkReply::finished, this, &Downloader::onHeadTestFinished);
+    }
+}
+
+void Downloader::onHeadTestFinished()
+{
+    QNetworkReply *test = qobject_cast<QNetworkReply*>(sender());
+    if (!test) return;
+    test->deleteLater();
+    if (test->error() != QNetworkReply::NoError)
+        m_chunkNumber = 1;
+    else if (test->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 206)
+        m_chunkNumber = 1;
     SetupWorkers();
 }
 
