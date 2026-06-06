@@ -21,6 +21,7 @@ private:
     qint64 m_start;
     qint64 m_end;
     QString m_tempPath;
+    QFile m_file;
 
     QNetworkAccessManager *manager = nullptr;
     QNetworkReply *reply = nullptr;
