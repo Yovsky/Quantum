@@ -15,6 +15,7 @@ SOURCES += \
     downloader.cpp \
     downloadinfo.cpp \
     downloadwindow.cpp \
+    downloadworker.cpp \
     finishwindow.cpp \
     main.cpp \
     qdman.cpp \
@@ -26,6 +27,7 @@ HEADERS += \
     downloadinfo.h \
     downloadstatus.h \
     downloadwindow.h \
+    downloadworker.h \
     finishwindow.h \
     qdman.h \
     urldialog.h
