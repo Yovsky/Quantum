@@ -91,6 +91,7 @@ void urlDialog::on_buttonBox_accepted()
         msg.exec();
         if (msg.clickedButton() == Yes)
         {
+            QFile::remove(savePath);
             DownloadWindow *window = new DownloadWindow(nullptr);
             window->startDownload(address, savePath, threadNumber);
             window->setAttribute(Qt::WA_DeleteOnClose);

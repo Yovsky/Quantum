@@ -107,19 +107,22 @@ void Downloader::onChunkProgress(qint64 bytes) {
 
 void Downloader::onChunkFinished() {
     m_chunksCompleted++;
-    if (m_chunksCompleted == m_chunkNumber) {
+    if (m_chunksCompleted == m_chunkNumber)
+    {
         mergeTemporaryFiles();
     }
 }
 
 void Downloader::mergeTemporaryFiles() {
     QFile finalFile(m_savePath);
-    if (!finalFile.open(QIODevice::WriteOnly)) {
+    if (!finalFile.open(QIODevice::WriteOnly))
+    {
         qDebug() << "Cannot compile output file target assembly footprint.";
         return;
     }
 
-    for (const QString &tempPath : m_tempPaths) {
+    for (const QString &tempPath : m_tempPaths)
+    {
         QFile tempFile(tempPath);
         if (tempFile.open(QIODevice::ReadOnly)) {
             finalFile.write(tempFile.readAll());

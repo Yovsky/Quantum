@@ -6,6 +6,12 @@ DownloadWorker::DownloadWorker(const QUrl &url, qint64 start, qint64 end, const 
 void DownloadWorker::StartDownload()
 {
     m_file.setFileName(m_tempPath);
+    if(!m_file.open(QIODevice::WriteOnly))
+    {
+        emit ErrorOcc(m_file.errorString());
+        return;
+    }
+
     manager = new QNetworkAccessManager(this);
     QNetworkRequest request(m_url);
 
@@ -20,19 +26,18 @@ void DownloadWorker::StartDownload()
 
 void DownloadWorker::OnReadReady()
 {
-    if(m_file.open(QIODevice::WriteOnly | QIODevice::Append))
-    {
-        QByteArray data = reply->readAll();
-        m_file.write(data);
-        emit Progress(data.size());
-    }
+    QByteArray data = reply->readAll();
+    m_file.write(data);
+    emit Progress(data.size());
 }
 
 void DownloadWorker::OnReplyFinished()
 {
+    m_file.flush();
+    m_file.close();
+
     if(reply->error() != QNetworkReply::NoError)
         emit ErrorOcc(reply->errorString());
     else
         emit Finished();
-    m_file.close();
 }

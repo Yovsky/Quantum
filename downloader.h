@@ -24,6 +24,7 @@
 #include <QtNetwork/QNetworkReply>
 #include <QNetworkRequest>
 #include <QFile>
+#include <QFileInfo>
 #include <QUrl>
 #include <QTimer>
 #include <QDebug>
