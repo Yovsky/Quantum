@@ -75,7 +75,10 @@ void Downloader::onHeadFinished()
 
     QByteArray acceptRanges = reply->rawHeader("Accept-Ranges");
     if (acceptRanges.toLower().contains("bytes") || m_chunkNumber == 1)
+    {
+        WriteDownloadData();
         SetupWorkers();
+    }
     else
     {
         QNetworkRequest request(m_url);
@@ -95,20 +98,43 @@ void Downloader::onHeadTestFinished()
         m_chunkNumber = 1;
     else if (test->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 206)
         m_chunkNumber = 1;
+    WriteDownloadData();
     SetupWorkers();
+}
+
+void Downloader::WriteDownloadData()
+{
+    QFile dataFile(m_savePath + ".qdmtemp");
+    if (!dataFile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        emit downloadFinished(false, "Failed to store download data.");
+        return;
+    }
+    QTextStream out(&dataFile);
+    out << "{\n\"url\": \"" + m_url.toString() + "\",\n\"savePath\": \"" + m_savePath + "\", \n\"chunkCount\": " + QString::number(m_chunkNumber) + ",\n\"fileSize\": " + QString::number(m_filesize) + "\n}" << Qt::endl;
+    dataFile.close();
+    QFile::remove(m_savePath + ".qdmdata");
+    if (!dataFile.rename(m_savePath + ".qdmdata"))
+    {
+        emit downloadFinished(false, "Failed to store download data.");
+        return;
+    }
 }
 
 void Downloader::SetupWorkers()
 {
+
+
     qint64 chunkSize = m_filesize / m_chunkNumber;
     for (int i = 0; i < m_chunkNumber; i++)
     {
         qint64 start = i * chunkSize;
         qint64 end = (i == m_chunkNumber - 1) ? m_filesize - 1 : start + chunkSize - 1;
 
-        QString tempPath = m_savePath + QString("qdm%1").arg(i);
+        QString tempPath = m_savePath + QString(".qdm%1").arg(i);
         m_tempPaths.append(tempPath);
-        QFile::remove(tempPath);
+        if (!isResuming)
+            QFile::remove(tempPath);
 
         QThread *workerThread = new QThread(this);
         DownloadWorker *worker = new DownloadWorker(m_url, start, end, tempPath);
@@ -192,6 +218,7 @@ void Downloader::mergeTemporaryFiles() {
         verFile.close();
     }
 
+    QFile::remove(m_savePath + ".qdmdata");
     emit downloadFinished(true, "Download completed successfully.");
 }
 
