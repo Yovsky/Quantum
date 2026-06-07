@@ -1,7 +1,7 @@
 #include "downloadworker.h"
 
-DownloadWorker::DownloadWorker(const QUrl &url, qint64 start, qint64 end, const QString &tempPath)
-    : m_url(url), m_start(start), m_end(end), m_tempPath(tempPath) {}
+DownloadWorker::DownloadWorker(const QUrl &url, int chunkIndex, qint64 start, qint64 end, const QString &tempPath)
+    : m_url(url), m_start(start), m_end(end), m_tempPath(tempPath), m_chunkIndex(chunkIndex) {}
 
 void DownloadWorker::StartDownload()
 {
@@ -29,7 +29,7 @@ void DownloadWorker::OnReadReady()
 {
     QByteArray data = reply->readAll();
     m_file.write(data);
-    emit Progress(data.size());
+    emit Progress(m_chunkIndex, data.size());
 }
 
 void DownloadWorker::OnReplyFinished()

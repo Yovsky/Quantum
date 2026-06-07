@@ -54,6 +54,8 @@ void Downloader::download(const QUrl &url, const QString &savePath, int chunkNum
     m_tempPaths.clear();
     m_SHA256 = SHA256;
 
+
+    chunkProgress.resize(m_chunkNumber);
     QNetworkRequest request(m_url);
     QNetworkReply *reply = manager->head(request);
     connect (reply, &QNetworkReply::finished, this, &Downloader::onHeadFinished);
@@ -77,6 +79,7 @@ void Downloader::onHeadFinished()
     if (acceptRanges.toLower().contains("bytes") || m_chunkNumber == 1)
     {
         WriteDownloadData();
+        StartDataTimer();
         SetupWorkers();
     }
     else
@@ -99,6 +102,7 @@ void Downloader::onHeadTestFinished()
     else if (test->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 206)
         m_chunkNumber = 1;
     WriteDownloadData();
+    StartDataTimer();
     SetupWorkers();
 }
 
@@ -111,7 +115,13 @@ void Downloader::WriteDownloadData()
         return;
     }
     QTextStream out(&dataFile);
-    out << "{\n\"url\": \"" + m_url.toString() + "\",\n\"savePath\": \"" + m_savePath + "\", \n\"chunkCount\": " + QString::number(m_chunkNumber) + ",\n\"fileSize\": " + QString::number(m_filesize) + "\n}" << Qt::endl;
+    out << "\"url\": \"" + m_url.toString() + "\",\n\"savePath\": \"" + m_savePath + "\", \n\"chunkCount\": " + QString::number(m_chunkNumber) + ",\n\"fileSize\": " + QString::number(m_filesize) << Qt::endl;
+
+    for (int i = 0; i < chunkProgress.size(); i++)
+    {
+        out << "\n\"chunk[" + QString::number(i) + "]\": " + QString::number(chunkProgress[i]) << Qt::endl;
+    }
+
     dataFile.close();
     QFile::remove(m_savePath + ".qdmdata");
     if (!dataFile.rename(m_savePath + ".qdmdata"))
@@ -121,10 +131,15 @@ void Downloader::WriteDownloadData()
     }
 }
 
+void Downloader::StartDataTimer()
+{
+    saveTimer = new QTimer(this);
+    connect(saveTimer, &QTimer::timeout, this, &Downloader::WriteDownloadData);
+    saveTimer->start(5000);
+}
+
 void Downloader::SetupWorkers()
 {
-
-
     qint64 chunkSize = m_filesize / m_chunkNumber;
     for (int i = 0; i < m_chunkNumber; i++)
     {
@@ -137,7 +152,7 @@ void Downloader::SetupWorkers()
             QFile::remove(tempPath);
 
         QThread *workerThread = new QThread(this);
-        DownloadWorker *worker = new DownloadWorker(m_url, start, end, tempPath);
+        DownloadWorker *worker = new DownloadWorker(m_url, i, start, end, tempPath);
         worker->moveToThread(workerThread);
 
         connect(workerThread, &QThread::started, worker, &::DownloadWorker::StartDownload);
@@ -152,12 +167,16 @@ void Downloader::SetupWorkers()
     }
 }
 
-void Downloader::onChunkProgress(qint64 bytes) {
+void Downloader::onChunkProgress(int chunkIndex, qint64 bytes)
+{
     m_bytesDownloaded += bytes;
+    if (chunkIndex >= 0 && chunkIndex < chunkProgress.size())
+        chunkProgress[chunkIndex] += bytes;
     emit progressChanged(m_bytesDownloaded, m_filesize);
 }
 
-void Downloader::onChunkFinished() {
+void Downloader::onChunkFinished()
+{
     m_chunksCompleted++;
     if (m_chunksCompleted == m_chunkNumber)
     {
@@ -165,7 +184,9 @@ void Downloader::onChunkFinished() {
     }
 }
 
-void Downloader::mergeTemporaryFiles() {
+void Downloader::mergeTemporaryFiles()
+{
+    saveTimer->stop();
     QFile finalFile(m_savePath);
     if (!finalFile.open(QIODevice::WriteOnly))
     {

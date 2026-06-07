@@ -38,6 +38,7 @@ public:
     explicit Downloader(QObject *parent = nullptr);
     void download(const QUrl &url, const QString &savePath, int chunkNumber, const QString &SHA256);
     void WriteDownloadData();
+    void StartDataTimer();
     void SetupWorkers();
     void downloadStop();
     void downloadPause();
@@ -49,7 +50,7 @@ signals:
 private slots:
     void onHeadFinished();
     void onHeadTestFinished();
-    void onChunkProgress(qint64 bytes);
+    void onChunkProgress(int chunkIndex, qint64 bytes);
     void onChunkFinished();
     void onReadReady();
     void onDownloadFinished();
@@ -62,10 +63,12 @@ private:
     QString m_savePath;
     int m_chunkNumber;
     int m_chunksCompleted;
+    QVector<qint64> chunkProgress;
     QString m_SHA256;
     qint64 m_filesize;
     qint64 m_bytesDownloaded;
     qint64 currentSize = 0;
+    QTimer *saveTimer;
     bool isPausing = false;
     bool isResuming;
     QStringList m_tempPaths;
