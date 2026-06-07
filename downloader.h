@@ -36,7 +36,7 @@ class Downloader : public QObject
 
 public:
     explicit Downloader(QObject *parent = nullptr);
-    void download(const QUrl &url, const QString &savePath, int chunkNumber);
+    void download(const QUrl &url, const QString &savePath, int chunkNumber, const QString &SHA256);
     void SetupWorkers();
     void downloadStop();
     void downloadPause();
@@ -61,6 +61,7 @@ private:
     QString m_savePath;
     int m_chunkNumber;
     int m_chunksCompleted;
+    QString m_SHA256;
     qint64 m_filesize;
     qint64 m_bytesDownloaded;
     qint64 currentSize = 0;

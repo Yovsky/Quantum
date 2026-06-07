@@ -77,6 +77,7 @@ void urlDialog::on_buttonBox_accepted()
     }
 
     QString savePath = downloadsDir + "/" + fileName;
+    QString SHA256 = ui->SHA256->text();
 
     QFileInfo file(savePath);
     if (file.isFile() || file.exists())
@@ -93,7 +94,7 @@ void urlDialog::on_buttonBox_accepted()
         {
             QFile::remove(savePath);
             DownloadWindow *window = new DownloadWindow(nullptr);
-            window->startDownload(address, savePath, threadNumber);
+            window->startDownload(address, savePath, threadNumber, SHA256);
             window->setAttribute(Qt::WA_DeleteOnClose);
             window->show();
         }
@@ -101,7 +102,7 @@ void urlDialog::on_buttonBox_accepted()
     }
 
     DownloadWindow *window = new DownloadWindow(nullptr);
-    window->startDownload(address, savePath, threadNumber);
+    window->startDownload(address, savePath, threadNumber, SHA256);
     window->setAttribute(Qt::WA_DeleteOnClose);
     window->show();
 }

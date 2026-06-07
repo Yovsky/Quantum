@@ -26,7 +26,7 @@ Downloader::Downloader(QObject *parent) : QObject(parent)
     manager = new QNetworkAccessManager(this);
 }
 
-void Downloader::download(const QUrl &url, const QString &savePath, int chunkNumber)
+void Downloader::download(const QUrl &url, const QString &savePath, int chunkNumber, const QString &SHA256)
 {
     // file.setFileName(savePath);
     // SavePath = savePath;
@@ -52,6 +52,7 @@ void Downloader::download(const QUrl &url, const QString &savePath, int chunkNum
     m_chunksCompleted = 0;
     m_bytesDownloaded = 0;
     m_tempPaths.clear();
+    m_SHA256 = SHA256;
 
     QNetworkRequest request(m_url);
     QNetworkReply *reply = manager->head(request);
@@ -142,22 +143,55 @@ void Downloader::mergeTemporaryFiles() {
     QFile finalFile(m_savePath);
     if (!finalFile.open(QIODevice::WriteOnly))
     {
-        qDebug() << "Cannot compile output file target assembly footprint.";
+        for (const QString &tempPath : m_tempPaths)
+        {
+            QFile::remove(tempPath);
+        }
+        emit downloadFinished(false, "Cannot compile output file target assembly footprint.");
         return;
     }
 
     for (const QString &tempPath : m_tempPaths)
     {
         QFile tempFile(tempPath);
-        if (tempFile.open(QIODevice::ReadOnly)) {
-            finalFile.write(tempFile.readAll());
-            tempFile.close();
-            QFile::remove(tempPath);
+        if (!tempFile.open(QIODevice::ReadOnly))
+        {
+            emit downloadFinished(false, "Failed while merging chunks.");
+            return;
         }
+        finalFile.write(tempFile.readAll());
+        tempFile.close();
+        QFile::remove(tempPath);
+    }
+    finalFile.close();
+    if (QFileInfo(finalFile).size() != m_filesize)
+    {
+        QFile::remove(m_savePath);
+        emit downloadFinished(false, "File size mismatch.");
+        return;
     }
 
-    finalFile.close();
-    qDebug() << "Download completed successfully!";
+
+    if (!m_SHA256.isEmpty())
+    {
+        QFile verFile(m_savePath);
+        if (!verFile.open(QIODevice::ReadOnly))
+        {
+            emit downloadFinished(false, "Failed to verify file hash.");
+            return;
+        }
+
+        QByteArray hash = QCryptographicHash::hash(verFile.readAll(), QCryptographicHash::Sha256);
+        if (hash.toHex().toLower() != m_SHA256.toLower())
+        {
+            verFile.close();
+            QFile::remove(m_savePath);
+            emit downloadFinished(false, "File hash does not meet provided hash.");
+            return;
+        }
+        verFile.close();
+    }
+
     emit downloadFinished(true, "Download completed successfully.");
 }
 

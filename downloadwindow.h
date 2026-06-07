@@ -36,7 +36,7 @@ class DownloadWindow : public QWidget
 
 public:
     explicit DownloadWindow(QWidget *parent = nullptr);
-    void startDownload(const QUrl &url, const QString &savePath, int threadNumber);
+    void startDownload(const QUrl &url, const QString &savePath, int threadNumber, const QString &SHA256);
     void GatherDownloadInfo();
     ~DownloadWindow();
 
