@@ -32,7 +32,6 @@ void DownloadInfo::Finished(QString Data)
 
 void DownloadInfo::UpdateInfo(const DownloadStatus &Info)
 {
-    // QStringList parts = Info.split('|');
     if (Info.fileName.isEmpty()) return;
 
     ui->fileName->setText(Info.fileName);

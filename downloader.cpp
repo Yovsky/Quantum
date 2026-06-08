@@ -119,13 +119,6 @@ void Downloader::WriteDownloadData()
         emit downloadFinished(false, "Failed to store download data.");
         return;
     }
-    // QTextStream out(&dataFile);
-    // out << "\"url\": \"" + m_url.toString() + "\",\n\"downloadID\": \"" + m_downloadID + "\",\n\"savePath\": \"" + m_savePath + "\", \n\"chunkCount\": " + QString::number(m_chunkNumber) + ",\n\"fileSize\": " + QString::number(m_filesize) << Qt::endl;
-
-    // for (int i = 0; i < chunkProgress.size(); i++)
-    // {
-    //     out << "\n\"chunk[" + QString::number(i) + "]\": " + QString::number(chunkProgress[i]) << Qt::endl;
-    // }
 
     QJsonObject root;
     root["url"] = m_url.toString();
@@ -143,6 +136,7 @@ void Downloader::WriteDownloadData()
     QJsonDocument doc(root);
     dataFile.write(doc.toJson());
 
+    // Used .qdmtemp then renamed it to ensure .qdmdata is created successfully and is not corrupted.
     dataFile.close();
     QFile::remove(m_qdmTempDir + "/" + m_downloadID + "/" + QFileInfo(m_savePath).fileName() + ".qdmdata");
     if (!dataFile.rename(m_qdmTempDir + "/" + m_downloadID + "/" + QFileInfo(m_savePath).fileName() + ".qdmdata"))

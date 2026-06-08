@@ -27,6 +27,9 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QDirIterator>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -37,10 +40,22 @@ QT_END_NAMESPACE
 class QDMan : public QMainWindow
 {
     Q_OBJECT
+    struct resumeDownload
+    {
+        QString ID;
+        QString url;
+        QString savePath;
+        qint64 fileSize;
+        int chunkCount;
+        QVector<qint64> chunkProgress;
+    };
 
 public:
     QDMan(QWidget *parent = nullptr);
     ~QDMan();
+    void GatherUnfinishedDownsInfo();
+    void CreateResumeCards();
+    QString GetSizeStr(qint64 size);
     void LoadSettings();
     void SaveSettings();
     void InsertItems(QStringList items, int row);
@@ -60,5 +75,6 @@ private:
     QSettings m_settings;
     QString m_qdmTempDir;
     QStringList m_unfinishedDownloads;
+    QVector<resumeDownload> m_resumeDownloads;
 };
 #endif // QDMAN_H

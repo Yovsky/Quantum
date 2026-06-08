@@ -46,6 +46,7 @@ QDMan::QDMan(QWidget *parent)
     {
         m_unfinishedDownloads.append(it.next());
     }
+    GatherUnfinishedDownsInfo();
 
     // ui->tableWidget->setColumnCount(5);
     // ui->tableWidget->setHorizontalHeaderLabels({"Name", "Size", "Status", "Transfer", "Date"});
@@ -54,6 +55,74 @@ QDMan::QDMan(QWidget *parent)
     AppGlobals::instance().setMainWindow(this);
     LoadSettings();
     connect(&AppGlobals::instance(), &AppGlobals::downloadWindowCreated, this, &QDMan::onDownloadWindowCreated);
+}
+
+void QDMan::GatherUnfinishedDownsInfo()
+{
+    for (QString dataFilePath : m_unfinishedDownloads)
+    {
+        QFile file(dataFilePath);
+        if (!file.open(QIODevice::ReadOnly))
+            continue;
+        QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+        file.close();
+        if (!doc.isObject())
+        {
+            continue;
+        }
+        QJsonObject root = doc.object();
+        resumeDownload item;
+        item.url = root["url"].toString();
+        item.ID = root["downloadID"].toString();
+        item.savePath = root["savePath"].toString();
+        item.fileSize = root["fileSize"].toInteger();
+        item.chunkCount = root["chunkCount"].toInt();
+        QVector<qint64> chunkProgress;
+        QJsonArray chunks = root["chunks"].toArray();
+        for (auto chunk : chunks)
+        {
+            chunkProgress.append(chunk.toInteger());
+        }
+        item.chunkProgress = chunkProgress;
+        m_resumeDownloads.append(item);
+    }
+}
+
+void QDMan::CreateResumeCards()
+{
+    for (const resumeDownload &item : m_resumeDownloads)
+    {
+        DownloadStatus info;
+        info.status = "Paused.";
+        info.fileSize = GetSizeStr(item.fileSize);
+        qint64 currentSize = 0;
+        for (qint64 chunk : item.chunkProgress)
+        {
+            currentSize += chunk;
+        }
+        info.currentSize = GetSizeStr(currentSize);
+        info.fileName = QFileInfo(item.savePath).fileName();
+        if (item.fileSize > 0)
+            info.progress = (currentSize / item.fileSize) * 100;
+        info.speed = "- B/s";
+        DownloadInfo *card = new DownloadInfo(this);
+        ui->downloadsLayout->addWidget(card);
+        card->UpdateInfo(info);
+    }
+}
+
+QString QDMan::GetSizeStr(qint64 size)
+{
+    QString result;
+    if (size <= 1024)
+        result = QString::number(size) + " B";
+    else if (size <= (1024 * 1024))
+        result = QString::number(size / 1024) + " KB";
+    else if (size <= (1024 * 1024 * 1024))
+        result = QString::number(size / (1024 * 1024)) + " MB";
+    else
+        result = QString::number(size / (1024 * 1024 * 1024)) + " GB";
+    return result;
 }
 
 void QDMan::SaveSettings()
