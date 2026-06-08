@@ -54,8 +54,11 @@ void Downloader::download(const QUrl &url, const QString &savePath, int chunkNum
     m_tempPaths.clear();
     m_SHA256 = SHA256;
 
+    m_qdmTempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/Quantum";
+    m_downloadID = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    QDir dir;
+    dir.mkpath(m_qdmTempDir + "/" + m_downloadID);
 
-    chunkProgress.resize(m_chunkNumber);
     QNetworkRequest request(m_url);
     QNetworkReply *reply = manager->head(request);
     connect (reply, &QNetworkReply::finished, this, &Downloader::onHeadFinished);
@@ -78,6 +81,7 @@ void Downloader::onHeadFinished()
     QByteArray acceptRanges = reply->rawHeader("Accept-Ranges");
     if (acceptRanges.toLower().contains("bytes") || m_chunkNumber == 1)
     {
+        chunkProgress.resize(m_chunkNumber);
         WriteDownloadData();
         StartDataTimer();
         SetupWorkers();
@@ -101,6 +105,7 @@ void Downloader::onHeadTestFinished()
         m_chunkNumber = 1;
     else if (test->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 206)
         m_chunkNumber = 1;
+    chunkProgress.resize(m_chunkNumber);
     WriteDownloadData();
     StartDataTimer();
     SetupWorkers();
@@ -108,14 +113,14 @@ void Downloader::onHeadTestFinished()
 
 void Downloader::WriteDownloadData()
 {
-    QFile dataFile(m_savePath + ".qdmtemp");
+    QFile dataFile(m_qdmTempDir + "/" + m_downloadID + "/" + QFileInfo(m_savePath).fileName() + ".qdmtemp");
     if (!dataFile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
         emit downloadFinished(false, "Failed to store download data.");
         return;
     }
     QTextStream out(&dataFile);
-    out << "\"url\": \"" + m_url.toString() + "\",\n\"savePath\": \"" + m_savePath + "\", \n\"chunkCount\": " + QString::number(m_chunkNumber) + ",\n\"fileSize\": " + QString::number(m_filesize) << Qt::endl;
+    out << "\"url\": \"" + m_url.toString() + "\",\n\"downloadID\": \"" + m_downloadID + "\",\n\"savePath\": \"" + m_savePath + "\", \n\"chunkCount\": " + QString::number(m_chunkNumber) + ",\n\"fileSize\": " + QString::number(m_filesize) << Qt::endl;
 
     for (int i = 0; i < chunkProgress.size(); i++)
     {
@@ -123,8 +128,8 @@ void Downloader::WriteDownloadData()
     }
 
     dataFile.close();
-    QFile::remove(m_savePath + ".qdmdata");
-    if (!dataFile.rename(m_savePath + ".qdmdata"))
+    QFile::remove(m_qdmTempDir + "/" + m_downloadID + "/" + QFileInfo(m_savePath).fileName() + ".qdmdata");
+    if (!dataFile.rename(m_qdmTempDir + "/" + m_downloadID + "/" + QFileInfo(m_savePath).fileName() + ".qdmdata"))
     {
         emit downloadFinished(false, "Failed to store download data.");
         return;
@@ -133,8 +138,11 @@ void Downloader::WriteDownloadData()
 
 void Downloader::StartDataTimer()
 {
-    saveTimer = new QTimer(this);
-    connect(saveTimer, &QTimer::timeout, this, &Downloader::WriteDownloadData);
+    if (!saveTimer)
+    {
+        saveTimer = new QTimer(this);
+        connect(saveTimer, &QTimer::timeout, this, &Downloader::WriteDownloadData);
+    }
     saveTimer->start(5000);
 }
 
@@ -146,7 +154,7 @@ void Downloader::SetupWorkers()
         qint64 start = i * chunkSize;
         qint64 end = (i == m_chunkNumber - 1) ? m_filesize - 1 : start + chunkSize - 1;
 
-        QString tempPath = m_savePath + QString(".qdm%1").arg(i);
+        QString tempPath = m_qdmTempDir + "/" + m_downloadID + "/" + QString("chunk%1.qdm").arg(i);
         m_tempPaths.append(tempPath);
         if (!isResuming)
             QFile::remove(tempPath);
@@ -239,7 +247,8 @@ void Downloader::mergeTemporaryFiles()
         verFile.close();
     }
 
-    QFile::remove(m_savePath + ".qdmdata");
+    QDir tempDir(m_qdmTempDir + "/" + m_downloadID);
+    tempDir.removeRecursively();
     emit downloadFinished(true, "Download completed successfully.");
 }
 
@@ -288,6 +297,8 @@ void Downloader::onDownloadFinished()
 
     senderReply->deleteLater();
 }
+
+// ===========================================================
 
 void Downloader::downloadStop()
 {

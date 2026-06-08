@@ -24,6 +24,8 @@
 #include "downloadstatus.h"
 #include <QMainWindow>
 #include <QSettings>
+#include <QStandardPaths>
+#include <QDir>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -55,5 +57,6 @@ private:
     Ui::QDMan *ui;
     QHash<QString, DownloadInfo*> downloadsList;
     QSettings m_settings;
+    QString m_qdmTempDir;
 };
 #endif // QDMAN_H

@@ -32,6 +32,10 @@ QDMan::QDMan(QWidget *parent)
     ui->setupUi(this);
     ui->downloadsLayout->setAlignment(Qt::AlignTop);
 
+    m_qdmTempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/Quantum";
+    QDir dir;
+    dir.mkdir(m_qdmTempDir);
+
     // ui->tableWidget->setColumnCount(5);
     // ui->tableWidget->setHorizontalHeaderLabels({"Name", "Size", "Status", "Transfer", "Date"});
     // ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);

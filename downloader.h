@@ -29,6 +29,9 @@
 #include <QTimer>
 #include <QDebug>
 #include <QThread>
+#include <QStandardPaths>
+#include <QDir>
+#include <QUuid>
 
 class Downloader : public QObject
 {
@@ -68,7 +71,9 @@ private:
     qint64 m_filesize;
     qint64 m_bytesDownloaded;
     qint64 currentSize = 0;
-    QTimer *saveTimer;
+    QTimer *saveTimer = nullptr;
+    QString m_qdmTempDir;
+    QString m_downloadID;
     bool isPausing = false;
     bool isResuming;
     QStringList m_tempPaths;
