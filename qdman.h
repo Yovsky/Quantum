@@ -26,6 +26,7 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include <QDir>
+#include <QDirIterator>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -58,5 +59,6 @@ private:
     QHash<QString, DownloadInfo*> downloadsList;
     QSettings m_settings;
     QString m_qdmTempDir;
+    QStringList m_unfinishedDownloads;
 };
 #endif // QDMAN_H

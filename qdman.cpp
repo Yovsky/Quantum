@@ -32,9 +32,20 @@ QDMan::QDMan(QWidget *parent)
     ui->setupUi(this);
     ui->downloadsLayout->setAlignment(Qt::AlignTop);
 
+    // Initialize the temp directory.
     m_qdmTempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/Quantum";
     QDir dir;
     dir.mkdir(m_qdmTempDir);
+
+    // Search for unfinished downloads.
+    QStringList filters;
+    filters << "*.qdmdata";
+    QDirIterator it(m_qdmTempDir, filters, QDir::Files, QDirIterator::Subdirectories);
+
+    while (it.hasNext())
+    {
+        m_unfinishedDownloads.append(it.next());
+    }
 
     // ui->tableWidget->setColumnCount(5);
     // ui->tableWidget->setHorizontalHeaderLabels({"Name", "Size", "Status", "Transfer", "Date"});
