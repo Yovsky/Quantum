@@ -32,6 +32,9 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QUuid>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
 
 class Downloader : public QObject
 {

@@ -119,13 +119,29 @@ void Downloader::WriteDownloadData()
         emit downloadFinished(false, "Failed to store download data.");
         return;
     }
-    QTextStream out(&dataFile);
-    out << "\"url\": \"" + m_url.toString() + "\",\n\"downloadID\": \"" + m_downloadID + "\",\n\"savePath\": \"" + m_savePath + "\", \n\"chunkCount\": " + QString::number(m_chunkNumber) + ",\n\"fileSize\": " + QString::number(m_filesize) << Qt::endl;
+    // QTextStream out(&dataFile);
+    // out << "\"url\": \"" + m_url.toString() + "\",\n\"downloadID\": \"" + m_downloadID + "\",\n\"savePath\": \"" + m_savePath + "\", \n\"chunkCount\": " + QString::number(m_chunkNumber) + ",\n\"fileSize\": " + QString::number(m_filesize) << Qt::endl;
 
-    for (int i = 0; i < chunkProgress.size(); i++)
+    // for (int i = 0; i < chunkProgress.size(); i++)
+    // {
+    //     out << "\n\"chunk[" + QString::number(i) + "]\": " + QString::number(chunkProgress[i]) << Qt::endl;
+    // }
+
+    QJsonObject root;
+    root["url"] = m_url.toString();
+    root["downloadID"] = m_downloadID;
+    root["savePath"] = m_savePath;
+    root["chunkCount"] = m_chunkNumber;
+    root["fileSize"] = m_filesize;
+
+    QJsonArray chunks;
+    for (qint64 progress : chunkProgress)
     {
-        out << "\n\"chunk[" + QString::number(i) + "]\": " + QString::number(chunkProgress[i]) << Qt::endl;
+        chunks.append(progress);
     }
+    root["chunks"] = chunks;
+    QJsonDocument doc(root);
+    dataFile.write(doc.toJson());
 
     dataFile.close();
     QFile::remove(m_qdmTempDir + "/" + m_downloadID + "/" + QFileInfo(m_savePath).fileName() + ".qdmdata");
