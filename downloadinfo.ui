@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>753</width>
+    <width>769</width>
     <height>70</height>
    </rect>
   </property>
@@ -24,10 +24,10 @@
 background: #0E141B
 }</string>
   </property>
-  <widget class="QPushButton" name="Button">
+  <widget class="QPushButton" name="pauseResume">
    <property name="geometry">
     <rect>
-     <x>660</x>
+     <x>680</x>
      <y>20</y>
      <width>80</width>
      <height>24</height>
@@ -248,6 +248,19 @@ color: #76808C
    </property>
    <property name="text">
     <string>30MB/s</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="status">
+   <property name="geometry">
+    <rect>
+     <x>440</x>
+     <y>50</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Downloading...</string>
    </property>
   </widget>
  </widget>

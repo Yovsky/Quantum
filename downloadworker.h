@@ -12,7 +12,7 @@ class DownloadWorker : public QObject
 public slots:
     void StartDownload();
 public:
-    explicit DownloadWorker(const QUrl& url, int chunkIndex, qint64 start, qint64 end, const QString &tempPath);
+    explicit DownloadWorker(const QUrl& url, int chunkIndex, qint64 start, qint64 end, const QString &tempPath, bool isResuming);
 private slots:
     void OnReadReady();
     void OnReplyFinished();
@@ -26,6 +26,7 @@ private:
     int m_chunkIndex;
     int retryCount = 0;
     int retryMax = 3;
+    bool m_isResuming;
 
     QNetworkAccessManager *manager = nullptr;
     QNetworkReply *reply = nullptr;

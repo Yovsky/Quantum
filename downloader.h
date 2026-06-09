@@ -20,6 +20,7 @@
 */
 
 #include "downloadworker.h"
+#include "downloadstatus.h"
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>
 #include <QNetworkRequest>
@@ -48,7 +49,7 @@ public:
     void SetupWorkers();
     void downloadStop();
     void downloadPause();
-    void downloadResume(const QUrl &url, const QString &savePath);
+    void downloadResume(downloadInformations info);
 signals:
     void downloadStarted();
     void progressChanged(qint64 bytesRecived, qint64 bytesTotal);

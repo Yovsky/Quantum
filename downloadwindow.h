@@ -50,7 +50,7 @@ private slots:
     void on_Pause_clicked();
 
 signals:
-    void DownloadInfo(const DownloadStatus& Info);
+    void DownloadInfo(const downloadInformations& Info);
 
 private:
     Ui::DownloadWindow *ui;

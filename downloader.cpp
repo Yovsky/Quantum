@@ -170,7 +170,7 @@ void Downloader::SetupWorkers()
             QFile::remove(tempPath);
 
         QThread *workerThread = new QThread(this);
-        DownloadWorker *worker = new DownloadWorker(m_url, i, start, end, tempPath);
+        DownloadWorker *worker = new DownloadWorker(m_url, i, start, end, tempPath, false);
         worker->moveToThread(workerThread);
 
         connect(workerThread, &QThread::started, worker, &::DownloadWorker::StartDownload);
@@ -308,6 +308,45 @@ void Downloader::onDownloadFinished()
     senderReply->deleteLater();
 }
 
+void Downloader::downloadResume(downloadInformations info)
+{
+    m_savePath = info.savePath;
+    m_url = QUrl(info.url);
+    m_chunkNumber = info.chunkCount;
+    m_chunksCompleted = 0;
+    m_bytesDownloaded = 0;
+    m_tempPaths.clear();
+    // m_SHA256 = SHA256;
+    qint64 chunkSize = info.fileByteSize / info.chunkCount;
+    for (int i = 0; i < info.chunkCount; i++)
+    {
+        QString tempPath = m_qdmTempDir + "/" + info.ID + "/" + QString("chunk%1.qdm").arg(i);
+        m_tempPaths.append(tempPath);
+        qint64 start = i * chunkSize + info.chunkProgress[i];
+        qint64 end = (i == info.chunkCount - 1) ? info.fileByteSize - 1 : (i + 1) * chunkSize - 1;
+
+        if (info.chunkProgress[i] >= end - i * chunkSize)
+        {
+            m_chunksCompleted++;
+            continue;
+        }
+
+        QThread *workerThread = new QThread(this);
+        DownloadWorker *worker = new DownloadWorker(info.url, i, start, end, tempPath, true);
+        worker->moveToThread(workerThread);
+
+        connect(workerThread, &QThread::started, worker, &::DownloadWorker::StartDownload);
+        connect(worker, &::DownloadWorker::Finished, workerThread, &QThread::quit);
+        connect(worker, &::DownloadWorker::Finished, worker, &DownloadWorker::deleteLater);
+        connect(workerThread, &QThread::finished, workerThread, &QThread::deleteLater);
+
+        connect(worker, &::DownloadWorker::Progress, this, &Downloader::onChunkProgress);
+        connect(worker, &::DownloadWorker::Finished, this, &Downloader::onChunkFinished);
+
+        workerThread->start();
+    }
+}
+
 // ===========================================================
 
 void Downloader::downloadStop()
@@ -329,29 +368,4 @@ void Downloader::downloadPause()
     if (!reply) return;
     isPausing = true;
     reply->abort();
-}
-
-void Downloader::downloadResume(const QUrl &url, const QString &savePath)
-{
-    file.setFileName(savePath);
-
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Append)) {
-        emit downloadFinished(false, "Can't open file for resume");
-        return;
-    }
-
-    qint64 existingSize = file.size();
-    currentSize = existingSize;
-
-    QNetworkRequest request(url);
-    QByteArray range = "bytes=" + QByteArray::number(existingSize) + "-";
-    request.setRawHeader("Range", range);
-
-    reply = manager->get(request);
-
-    connect(reply, &QIODevice::readyRead, this, &Downloader::onReadReady);
-    connect(reply, &QNetworkReply::finished, this, &Downloader::onDownloadFinished);
-    connect(reply, &QNetworkReply::downloadProgress, this, &Downloader::progressChanged);
-
-    emit downloadStarted();
 }

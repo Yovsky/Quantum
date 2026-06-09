@@ -86,7 +86,7 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 
     if(lastDownloaded < 1024)
     {
-        Recmsg = QString::number(lastDownloaded, 'f', 2) + " Bytes";
+        Recmsg = QString::number(lastDownloaded, 'f', 2) + " B";
     }
     else if (lastDownloaded < 1024.0 * 1024.0)
     {
@@ -107,7 +107,7 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 
     if(bytesTotal < 1024)
     {
-        Size = QString::number(bytesTotal, 'f', 2) + " Bytes";
+        Size = QString::number(bytesTotal, 'f', 2) + " B";
     }
     else if (bytesTotal < 1024*1024)
     {
@@ -192,7 +192,7 @@ void DownloadWindow::GatherDownloadInfo()
     // Info += DownloadDate + "|";
     // Info += QString::number(Progress, 'f', 0);
 
-    DownloadStatus Info;
+    downloadInformations Info;
 
     Info.fileName = QFileInfo(filePath).fileName();
     Info.fileSize = Size;
@@ -229,7 +229,7 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
 
     this->close();
 
-    DownloadStatus Info;
+    downloadInformations Info;
 
     Info.fileName = QFileInfo(filePath).fileName();
     Info.fileSize = Size;
@@ -274,7 +274,7 @@ void DownloadWindow::on_Pause_clicked()
     else
     {
         isPaused = false;
-        download->downloadResume(QUrl(fileUrl), filePath);
+        // download->downloadResume(QUrl(fileUrl), filePath);
         ui->Pause->setText("Pause");
         Status = "Downloading...";
     }

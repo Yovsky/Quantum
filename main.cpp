@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    qRegisterMetaType<DownloadStatus>("DownloadStatus");
+    qRegisterMetaType<downloadInformations>("DownloadStatus");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();

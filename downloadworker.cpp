@@ -1,16 +1,28 @@
 #include "downloadworker.h"
 
-DownloadWorker::DownloadWorker(const QUrl &url, int chunkIndex, qint64 start, qint64 end, const QString &tempPath)
-    : m_url(url), m_start(start), m_end(end), m_tempPath(tempPath), m_chunkIndex(chunkIndex) {}
+DownloadWorker::DownloadWorker(const QUrl &url, int chunkIndex, qint64 start, qint64 end, const QString &tempPath, bool isResuming)
+    : m_url(url), m_start(start), m_end(end), m_tempPath(tempPath), m_chunkIndex(chunkIndex), m_isResuming(isResuming) {}
 
 void DownloadWorker::StartDownload()
 {
     m_file.setFileName(m_tempPath);
-    if(!m_file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    if (m_isResuming)
     {
-        emit ErrorOcc(m_file.errorString());
-        return;
+        if(!m_file.open(QIODevice::WriteOnly | QIODevice::Append))
+        {
+            emit ErrorOcc(m_file.errorString());
+            return;
+        }
     }
+    else
+    {
+        if(!m_file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        {
+            emit ErrorOcc(m_file.errorString());
+            return;
+        }
+    }
+
 
     if (!manager)
         manager = new QNetworkAccessManager(this);

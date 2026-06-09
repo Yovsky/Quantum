@@ -3,6 +3,7 @@
 
 #include "downloadstatus.h"
 #include <QWidget>
+#include <QPushButton>
 
 namespace Ui {
 class DownloadInfo;
@@ -17,10 +18,19 @@ public:
     void Downloading(QString Data);
     void Paused(QString Data);
     void Finished(QString Data);
-    void UpdateInfo(const DownloadStatus &Info);
+    void UpdateInfo(const downloadInformations &Info);
+    void SetForResume(const downloadInformations &item);
     ~DownloadInfo();
 
+signals:
+    void resumeRequested(downloadInformations info);
+    void pauseRequested();
+
+private slots:
+    void on_pauseResume_clicked();
+
 private:
+    downloadInformations m_info;
     Ui::DownloadInfo *ui;
 };
 

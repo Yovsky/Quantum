@@ -13,6 +13,7 @@ DownloadInfo::DownloadInfo(QWidget *parent)
     //     Paused(Info);
     // else if (Type == "Finished")
     //     Finished(Info);
+
 }
 
 void DownloadInfo::Downloading(QString Data)
@@ -30,10 +31,14 @@ void DownloadInfo::Finished(QString Data)
 
 }
 
-void DownloadInfo::UpdateInfo(const DownloadStatus &Info)
+void DownloadInfo::UpdateInfo(const downloadInformations &Info)
 {
     if (Info.fileName.isEmpty()) return;
+    m_info = Info;
+    if (Info.status == "Paused.") ui->pauseResume->setText("Resume");
+    else if (Info.status == "Downloading...") ui->pauseResume->setText("Pause");
 
+    ui->status->setText(Info.status);
     ui->fileName->setText(Info.fileName);
     ui->size->setText(Info.currentSize + "/" + Info.fileSize);
     ui->speed->setText(Info.speed);
@@ -45,3 +50,12 @@ DownloadInfo::~DownloadInfo()
 {
     delete ui;
 }
+
+void DownloadInfo::on_pauseResume_clicked()
+{
+    if (ui->status->text() == "Downloading...")
+        emit pauseRequested();
+    else if (ui->status->text() == "Paused.")
+        emit resumeRequested(m_info);
+}
+

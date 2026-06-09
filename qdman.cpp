@@ -47,6 +47,7 @@ QDMan::QDMan(QWidget *parent)
         m_unfinishedDownloads.append(it.next());
     }
     GatherUnfinishedDownsInfo();
+    CreateResumeCards();
 
     // ui->tableWidget->setColumnCount(5);
     // ui->tableWidget->setHorizontalHeaderLabels({"Name", "Size", "Status", "Transfer", "Date"});
@@ -71,11 +72,11 @@ void QDMan::GatherUnfinishedDownsInfo()
             continue;
         }
         QJsonObject root = doc.object();
-        resumeDownload item;
+        downloadInformations item;
         item.url = root["url"].toString();
         item.ID = root["downloadID"].toString();
         item.savePath = root["savePath"].toString();
-        item.fileSize = root["fileSize"].toInteger();
+        item.fileByteSize = root["fileSize"].toInteger();
         item.chunkCount = root["chunkCount"].toInt();
         QVector<qint64> chunkProgress;
         QJsonArray chunks = root["chunks"].toArray();
@@ -90,11 +91,11 @@ void QDMan::GatherUnfinishedDownsInfo()
 
 void QDMan::CreateResumeCards()
 {
-    for (const resumeDownload &item : m_resumeDownloads)
+    for (const downloadInformations &item : m_resumeDownloads)
     {
-        DownloadStatus info;
+        downloadInformations info = item;
         info.status = "Paused.";
-        info.fileSize = GetSizeStr(item.fileSize);
+        info.fileSize = GetSizeStr(item.fileByteSize);
         qint64 currentSize = 0;
         for (qint64 chunk : item.chunkProgress)
         {
@@ -102,13 +103,20 @@ void QDMan::CreateResumeCards()
         }
         info.currentSize = GetSizeStr(currentSize);
         info.fileName = QFileInfo(item.savePath).fileName();
-        if (item.fileSize > 0)
-            info.progress = (currentSize / item.fileSize) * 100;
+        if (item.fileByteSize > 0)
+            info.progress = (currentSize / item.fileByteSize) * 100;
         info.speed = "- B/s";
         DownloadInfo *card = new DownloadInfo(this);
         ui->downloadsLayout->addWidget(card);
         card->UpdateInfo(info);
+        connect(card, &DownloadInfo::resumeRequested, this, &QDMan::onResumeDownload);
     }
+}
+
+void QDMan::onResumeDownload(downloadInformations item)
+{
+    Downloader *downloader = new Downloader();
+    downloader->downloadResume(item);
 }
 
 QString QDMan::GetSizeStr(qint64 size)
@@ -199,7 +207,7 @@ void QDMan::InsertItems(QStringList items, int row)
     // }
 }
 
-void QDMan::SetTable(const DownloadStatus &Info)
+void QDMan::SetTable(const downloadInformations &Info)
 {
     // QStringList parts = Info.split("|");
     // if (parts.size() != 6 || parts[0].isEmpty()) return;

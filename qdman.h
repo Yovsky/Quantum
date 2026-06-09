@@ -40,15 +40,6 @@ QT_END_NAMESPACE
 class QDMan : public QMainWindow
 {
     Q_OBJECT
-    struct resumeDownload
-    {
-        QString ID;
-        QString url;
-        QString savePath;
-        qint64 fileSize;
-        int chunkCount;
-        QVector<qint64> chunkProgress;
-    };
 
 public:
     QDMan(QWidget *parent = nullptr);
@@ -56,6 +47,7 @@ public:
     void GatherUnfinishedDownsInfo();
     void CreateResumeCards();
     QString GetSizeStr(qint64 size);
+    void onResumeDownload(downloadInformations item);
     void LoadSettings();
     void SaveSettings();
     void InsertItems(QStringList items, int row);
@@ -64,7 +56,7 @@ private slots:
     void onDownloadWindowCreated(DownloadWindow *dw);
 
 public slots:
-    void SetTable(const DownloadStatus& Info);
+    void SetTable(const downloadInformations& Info);
 
 private slots:
     void on_actionAdd_New_Download_triggered();
@@ -75,6 +67,6 @@ private:
     QSettings m_settings;
     QString m_qdmTempDir;
     QStringList m_unfinishedDownloads;
-    QVector<resumeDownload> m_resumeDownloads;
+    QVector<downloadInformations> m_resumeDownloads;
 };
 #endif // QDMAN_H
