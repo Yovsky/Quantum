@@ -5,11 +5,16 @@ DownloadWorker::DownloadWorker(const QUrl &url, int chunkIndex, qint64 start, qi
 
 void DownloadWorker::StartDownload()
 {
+    qDebug() << "StartDownload called for chunk" << m_chunkIndex;
     m_file.setFileName(m_tempPath);
+
+    qDebug() << "Opening:" << m_tempPath;
+
     if (m_isResuming)
     {
         if(!m_file.open(QIODevice::WriteOnly | QIODevice::Append))
         {
+            qDebug() << "Failed to open file:" << m_file.errorString();
             emit ErrorOcc(m_file.errorString());
             return;
         }
@@ -32,6 +37,9 @@ void DownloadWorker::StartDownload()
     request.setRawHeader("Range", rangeHeader);
 
     reply = manager->get(request);
+    qDebug() << "GET issued for chunk" << m_chunkIndex
+             << "URL:" << m_url
+             << "Range:" << rangeHeader;
 
     connect(reply, &QNetworkReply::readyRead, this, &DownloadWorker::OnReadReady);
     connect(reply, &QNetworkReply::finished, this, &DownloadWorker::OnReplyFinished);
@@ -53,6 +61,12 @@ void DownloadWorker::OnReplyFinished()
     reply->deleteLater();
     reply = nullptr;
 
+    qDebug() << "Chunk" << m_chunkIndex
+             << "finished with error:"
+             << error
+             << errorStr
+             << "status:"
+             << status;
 
     if(error != QNetworkReply::NoError)
     {

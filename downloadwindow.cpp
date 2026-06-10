@@ -68,6 +68,19 @@ void DownloadWindow::startDownload(const QUrl &url, const QString &savePath, int
     download->download(finalUrl, savePath, threadNumber, SHA256);
 }
 
+void DownloadWindow::Resume(downloadInformations info)
+{
+    ui->adress->setText(info.url);
+    ui->progressBar->setValue(info.progress);
+    Status = "Resuming...";
+    ui->status->setText(Status);
+
+    downloadTimer.start();
+    DownloadDate = QDateTime::currentDateTime().toString("dd/MM/yyy hh:mm:ss");
+    lastUpdateTime = QTime::currentTime();
+    download->downloadResume(info);
+}
+
 void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 {
     lastDownloaded = bytesReceived + lastFileSize - bytesTotal;
@@ -207,16 +220,12 @@ void DownloadWindow::GatherDownloadInfo()
 
 void DownloadWindow::onDownloadFinish(bool success, const QString &message)
 {
-    qDebug() << "onDownloadFinish called — success:" << success << "msg:" << message << "isPaused:" << isPaused;
-
     if (isPaused || message.contains("canceled", Qt::CaseInsensitive))
-    {
-        qDebug() << "Silently ignored error: " << message;
         return;
-    }
 
-    Status = (success)? "Completed." : "Failed.";
+    Status = success ? "Completed." : "Failed.";
     ui->status->setText(Status);
+
     if (!success)
     {
         QMessageBox::critical(this, "Download Error", message);
@@ -224,24 +233,24 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
     }
 
     ui->progressBar->setValue(100);
-    QSystemTrayIcon tray;
-    tray.showMessage("QDMan", message);
-
-    this->close();
 
     downloadInformations Info;
-
     Info.fileName = QFileInfo(filePath).fileName();
     Info.fileSize = Size;
     Info.Date = DownloadDate;
-    Info.progress = Progress;
+    Info.progress = 100.0f;
     Info.status = "Completed";
     Info.currentSize = Recmsg;
-
     emit DownloadInfo(Info);
 
-    FinishWindow finish(this, fileUrl, filePath);
+    FinishWindow finish(nullptr, fileUrl, filePath);
+
+    QSystemTrayIcon tray;
+    tray.showMessage("QDMan", message);
+
+    this->hide();
     finish.exec();
+    this->close();
 }
 
 void DownloadWindow::downloadStop()

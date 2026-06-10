@@ -115,8 +115,10 @@ void QDMan::CreateResumeCards()
 
 void QDMan::onResumeDownload(downloadInformations item)
 {
-    Downloader *downloader = new Downloader();
-    downloader->downloadResume(item);
+    DownloadWindow *window = new DownloadWindow(nullptr);
+    window->setAttribute(Qt::WA_DeleteOnClose);
+    window->show();
+    window->Resume(item);
 }
 
 QString QDMan::GetSizeStr(qint64 size)

@@ -204,38 +204,44 @@ void Downloader::onChunkFinished()
 
 void Downloader::mergeTemporaryFiles()
 {
-    saveTimer->stop();
+    if (saveTimer) saveTimer->stop();
+
     QFile finalFile(m_savePath);
     if (!finalFile.open(QIODevice::WriteOnly))
     {
         for (const QString &tempPath : m_tempPaths)
-        {
             QFile::remove(tempPath);
-        }
-        emit downloadFinished(false, "Cannot compile output file target assembly footprint.");
+        emit downloadFinished(false, "Cannot open output file for writing.");
         return;
     }
 
+    qint64 totalWritten = 0;
     for (const QString &tempPath : m_tempPaths)
     {
         QFile tempFile(tempPath);
         if (!tempFile.open(QIODevice::ReadOnly))
         {
-            emit downloadFinished(false, "Failed while merging chunks.");
+            finalFile.close();
+            emit downloadFinished(false, "Failed while merging chunks: " + tempPath);
             return;
         }
-        finalFile.write(tempFile.readAll());
+        QByteArray data = tempFile.readAll();
+        finalFile.write(data);
+        totalWritten += data.size();
         tempFile.close();
         QFile::remove(tempPath);
     }
     finalFile.close();
-    if (QFileInfo(finalFile).size() != m_filesize)
+
+    qDebug() << "Merged size:" << totalWritten << "expected:" << m_filesize;
+
+    if (totalWritten != m_filesize)
     {
         QFile::remove(m_savePath);
-        emit downloadFinished(false, "File size mismatch.");
+        emit downloadFinished(false, QString("File size mismatch: got %1, expected %2")
+                                         .arg(totalWritten).arg(m_filesize));
         return;
     }
-
 
     if (!m_SHA256.isEmpty())
     {
@@ -314,37 +320,67 @@ void Downloader::downloadResume(downloadInformations info)
     m_url = QUrl(info.url);
     m_chunkNumber = info.chunkCount;
     m_chunksCompleted = 0;
-    m_bytesDownloaded = 0;
     m_tempPaths.clear();
-    // m_SHA256 = SHA256;
+    m_filesize = info.fileByteSize;
+    m_downloadID = info.ID;
+    m_qdmTempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+                   + "/Quantum";
+    isResuming = true;
+
+    m_bytesDownloaded = 0;
+    chunkProgress = info.chunkProgress;
+
+    QNetworkRequest req(m_url);
+    QNetworkReply *headReply = manager->head(req);
+    connect(headReply, &QNetworkReply::finished, this, [this, headReply, info]() mutable {
+    headReply->deleteLater();
+    qint64 freshSize = headReply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
+    if (freshSize > 0 && freshSize != m_filesize)
+    {
+        qDebug() << "File size changed on server! Was:" << m_filesize << "Now:" << freshSize;
+        emit downloadFinished(false, "File changed on server, cannot resume.");
+        return;
+    }
+
     qint64 chunkSize = info.fileByteSize / info.chunkCount;
     for (int i = 0; i < info.chunkCount; i++)
     {
         QString tempPath = m_qdmTempDir + "/" + info.ID + "/" + QString("chunk%1.qdm").arg(i);
         m_tempPaths.append(tempPath);
-        qint64 start = i * chunkSize + info.chunkProgress[i];
-        qint64 end = (i == info.chunkCount - 1) ? info.fileByteSize - 1 : (i + 1) * chunkSize - 1;
 
-        if (info.chunkProgress[i] >= end - i * chunkSize)
+        qint64 actualBytesOnDisk = QFileInfo(tempPath).exists() ? QFileInfo(tempPath).size() : 0;
+        chunkProgress[i] = actualBytesOnDisk;
+        m_bytesDownloaded += actualBytesOnDisk;
+
+        qint64 chunkEnd = (i == info.chunkCount - 1) ? info.fileByteSize - 1 : (i + 1) * chunkSize - 1;
+        qint64 expectedChunkSize = chunkEnd - i * chunkSize + 1;
+
+        if (actualBytesOnDisk >= expectedChunkSize)
         {
             m_chunksCompleted++;
             continue;
         }
 
+        qint64 start = i * chunkSize + actualBytesOnDisk;
+        qint64 end = chunkEnd;
+
+        qDebug() << tempPath << "size:" << actualBytesOnDisk
+                 << "start:" << start << "end:" << end;
+
         QThread *workerThread = new QThread(this);
         DownloadWorker *worker = new DownloadWorker(info.url, i, start, end, tempPath, true);
         worker->moveToThread(workerThread);
 
-        connect(workerThread, &QThread::started, worker, &::DownloadWorker::StartDownload);
-        connect(worker, &::DownloadWorker::Finished, workerThread, &QThread::quit);
-        connect(worker, &::DownloadWorker::Finished, worker, &DownloadWorker::deleteLater);
+        connect(workerThread, &QThread::started, worker, &DownloadWorker::StartDownload);
+        connect(worker, &DownloadWorker::Finished, workerThread, &QThread::quit);
+        connect(worker, &DownloadWorker::Finished, worker, &DownloadWorker::deleteLater);
         connect(workerThread, &QThread::finished, workerThread, &QThread::deleteLater);
-
-        connect(worker, &::DownloadWorker::Progress, this, &Downloader::onChunkProgress);
-        connect(worker, &::DownloadWorker::Finished, this, &Downloader::onChunkFinished);
+        connect(worker, &DownloadWorker::Progress, this, &Downloader::onChunkProgress);
+        connect(worker, &DownloadWorker::Finished, this, &Downloader::onChunkFinished);
 
         workerThread->start();
     }
+    });
 }
 
 // ===========================================================
@@ -352,6 +388,7 @@ void Downloader::downloadResume(downloadInformations info)
 void Downloader::downloadStop()
 {
     isPausing = false;
+    if (saveTimer) saveTimer->stop();
     if (reply)
     {
         QNetworkReply *r = reply;

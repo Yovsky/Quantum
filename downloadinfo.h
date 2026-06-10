@@ -19,7 +19,6 @@ public:
     void Paused(QString Data);
     void Finished(QString Data);
     void UpdateInfo(const downloadInformations &Info);
-    void SetForResume(const downloadInformations &item);
     ~DownloadInfo();
 
 signals:
