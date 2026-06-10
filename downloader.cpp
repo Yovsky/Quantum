@@ -173,6 +173,9 @@ void Downloader::SetupWorkers()
         DownloadWorker *worker = new DownloadWorker(m_url, i, start, end, tempPath, false);
         worker->moveToThread(workerThread);
 
+        m_workers.append(worker);
+        m_workerThreads.append(workerThread);
+
         connect(workerThread, &QThread::started, worker, &::DownloadWorker::StartDownload);
         connect(worker, &::DownloadWorker::Finished, workerThread, &QThread::quit);
         connect(worker, &::DownloadWorker::Finished, worker, &DownloadWorker::deleteLater);
@@ -180,6 +183,11 @@ void Downloader::SetupWorkers()
 
         connect(worker, &::DownloadWorker::Progress, this, &Downloader::onChunkProgress);
         connect(worker, &::DownloadWorker::Finished, this, &Downloader::onChunkFinished);
+
+        connect(worker, &DownloadWorker::Finished, this, [this, worker, workerThread]() {
+            m_workers.removeOne(worker);
+            m_workerThreads.removeOne(workerThread);
+        });
 
         workerThread->start();
     }
@@ -196,6 +204,7 @@ void Downloader::onChunkProgress(int chunkIndex, qint64 bytes)
 void Downloader::onChunkFinished()
 {
     m_chunksCompleted++;
+    if (isPausing) return;
     if (m_chunksCompleted == m_chunkNumber)
     {
         mergeTemporaryFiles();
@@ -316,6 +325,9 @@ void Downloader::onDownloadFinished()
 
 void Downloader::downloadResume(downloadInformations info)
 {
+    isPausing = false;
+    m_workers.clear();
+    m_workerThreads.clear();
     m_savePath = info.savePath;
     m_url = QUrl(info.url);
     m_chunkNumber = info.chunkCount;
@@ -328,7 +340,7 @@ void Downloader::downloadResume(downloadInformations info)
     isResuming = true;
 
     m_bytesDownloaded = 0;
-    chunkProgress = info.chunkProgress;
+    chunkProgress.resize(m_chunkNumber);
 
     QNetworkRequest req(m_url);
     QNetworkReply *headReply = manager->head(req);
@@ -341,6 +353,8 @@ void Downloader::downloadResume(downloadInformations info)
         emit downloadFinished(false, "File changed on server, cannot resume.");
         return;
     }
+
+    StartDataTimer();
 
     qint64 chunkSize = info.fileByteSize / info.chunkCount;
     for (int i = 0; i < info.chunkCount; i++)
@@ -371,6 +385,9 @@ void Downloader::downloadResume(downloadInformations info)
         DownloadWorker *worker = new DownloadWorker(info.url, i, start, end, tempPath, true);
         worker->moveToThread(workerThread);
 
+        m_workers.append(worker);
+        m_workerThreads.append(workerThread);
+
         connect(workerThread, &QThread::started, worker, &DownloadWorker::StartDownload);
         connect(worker, &DownloadWorker::Finished, workerThread, &QThread::quit);
         connect(worker, &DownloadWorker::Finished, worker, &DownloadWorker::deleteLater);
@@ -378,12 +395,20 @@ void Downloader::downloadResume(downloadInformations info)
         connect(worker, &DownloadWorker::Progress, this, &Downloader::onChunkProgress);
         connect(worker, &DownloadWorker::Finished, this, &Downloader::onChunkFinished);
 
+        connect(worker, &DownloadWorker::Finished, this, [this, worker, workerThread]()
+        {
+            m_workers.removeOne(worker);
+            m_workerThreads.removeOne(workerThread);
+        });
+
         workerThread->start();
     }
     });
-}
 
-// ===========================================================
+    StartDataTimer();
+
+    emit progressChanged(m_bytesDownloaded, m_filesize);
+}
 
 void Downloader::downloadStop()
 {
@@ -402,7 +427,35 @@ void Downloader::downloadStop()
 
 void Downloader::downloadPause()
 {
-    if (!reply) return;
+    if (m_workers.isEmpty()) return;
+
     isPausing = true;
-    reply->abort();
+    if (saveTimer) saveTimer->stop();
+
+    WriteDownloadData();
+
+    for (DownloadWorker *worker : m_workers)
+    {
+        QMetaObject::invokeMethod(worker, "Stop", Qt::QueuedConnection);
+    }
+}
+
+qint64 Downloader::fileSize()
+{
+    return m_filesize;
+}
+
+int Downloader::chunkNumber()
+{
+    return m_chunkNumber;
+}
+
+QString Downloader::downloadID()
+{
+    return m_downloadID;
+}
+
+QVector<qint64> Downloader::chunkProgressData()
+{
+    return chunkProgress;
 }

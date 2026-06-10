@@ -45,6 +45,13 @@ void DownloadWorker::StartDownload()
     connect(reply, &QNetworkReply::finished, this, &DownloadWorker::OnReplyFinished);
 }
 
+void DownloadWorker::Stop()
+{
+    m_Stopped = true;
+    if (reply)
+        reply->abort();
+}
+
 void DownloadWorker::OnReadReady()
 {
     QByteArray data = reply->readAll();
@@ -61,12 +68,11 @@ void DownloadWorker::OnReplyFinished()
     reply->deleteLater();
     reply = nullptr;
 
-    qDebug() << "Chunk" << m_chunkIndex
-             << "finished with error:"
-             << error
-             << errorStr
-             << "status:"
-             << status;
+    if (m_Stopped)
+    {
+        emit Finished();
+        return;
+    }
 
     if(error != QNetworkReply::NoError)
     {

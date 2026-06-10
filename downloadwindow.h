@@ -67,9 +67,9 @@ private:
     qint64 lastBytesReceived = 0;
     QTime lastUpdateTime;
     QString fileUrl;
+    downloadInformations Info;
     bool isPaused = false;
     qint64 lastProgress = 0;
-    qint64 lastFileSize = 0;
     qint64 lastDownloaded = 0;
 };
 

@@ -50,6 +50,10 @@ public:
     void downloadStop();
     void downloadPause();
     void downloadResume(downloadInformations info);
+    qint64 fileSize();
+    int chunkNumber();
+    QVector<qint64> chunkProgressData();
+    QString downloadID();
 signals:
     void downloadStarted();
     void progressChanged(qint64 bytesRecived, qint64 bytesTotal);
@@ -78,6 +82,8 @@ private:
     QTimer *saveTimer = nullptr;
     QString m_qdmTempDir;
     QString m_downloadID;
+    QVector<DownloadWorker*> m_workers;
+    QVector<QThread*> m_workerThreads;
     bool isPausing = false;
     bool isResuming;
     QStringList m_tempPaths;

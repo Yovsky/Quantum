@@ -83,13 +83,12 @@ void DownloadWindow::Resume(downloadInformations info)
 
 void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 {
-    lastDownloaded = bytesReceived + lastFileSize - bytesTotal;
-    if (bytesTotal < lastFileSize)  bytesTotal = lastFileSize;
-
     if (bytesTotal <= 0) {
         ui->progressBar->setValue(lastProgress);
         return;
     }
+
+    lastDownloaded = bytesReceived;
 
     Progress = (static_cast<double>(lastDownloaded) / bytesTotal) * 100.0;
     ui->progressBar->setValue(static_cast<int>(Progress));
@@ -192,8 +191,6 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
     } else {
         ui->fileSize->setText("Unknown");
     }
-
-    if (bytesTotal != lastFileSize) lastFileSize = bytesTotal;
 }
 
 void DownloadWindow::GatherDownloadInfo()
@@ -205,8 +202,6 @@ void DownloadWindow::GatherDownloadInfo()
     // Info += DownloadDate + "|";
     // Info += QString::number(Progress, 'f', 0);
 
-    downloadInformations Info;
-
     Info.fileName = QFileInfo(filePath).fileName();
     Info.fileSize = Size;
     Info.speed = Transfer;
@@ -214,6 +209,12 @@ void DownloadWindow::GatherDownloadInfo()
     Info.progress = Progress;
     Info.status = Status;
     Info.currentSize = Recmsg;
+    Info.url = fileUrl;
+    Info.savePath = filePath;
+    Info.fileByteSize = download->fileSize();
+    Info.chunkCount = download->chunkNumber();
+    Info.chunkProgress = download->chunkProgressData();
+    Info.ID = download->downloadID();
 
     emit DownloadInfo(Info);
 }
@@ -283,7 +284,7 @@ void DownloadWindow::on_Pause_clicked()
     else
     {
         isPaused = false;
-        // download->downloadResume(QUrl(fileUrl), filePath);
+        download->downloadResume(Info);
         ui->Pause->setText("Pause");
         Status = "Downloading...";
     }
