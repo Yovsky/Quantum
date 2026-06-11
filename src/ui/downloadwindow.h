@@ -19,8 +19,8 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "downloader.h"
-#include "downloadstatus.h"
+#include "src/core/downloader.h"
+#include "src/models/downloadstatus.h"
 #include <QWidget>
 #include <QUrl>
 #include <QElapsedTimer>

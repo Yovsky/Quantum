@@ -19,8 +19,8 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "downloadworker.h"
-#include "downloadstatus.h"
+#include "src/core/downloadworker.h"
+#include "src/models/downloadstatus.h"
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>
 #include <QNetworkRequest>

@@ -16,7 +16,7 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "qdman.h"
+#include "src/ui/qdman.h"
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>

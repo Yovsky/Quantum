@@ -19,9 +19,9 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "downloadwindow.h"
-#include "downloadinfo.h"
-#include "downloadstatus.h"
+#include "src/ui/downloadwindow.h"
+#include "src/ui/downloadinfo.h"
+#include "src/models/downloadstatus.h"
 #include <QMainWindow>
 #include <QSettings>
 #include <QStandardPaths>

@@ -1,11 +1,11 @@
 <RCC>
     <qresource prefix="/">
-        <file>icons/new.png</file>
-        <file>icons/stop.png</file>
-        <file>icons/UI/close.png</file>
-        <file>icons/UI/downloads.png</file>
-        <file>icons/UI/open.png</file>
-        <file>icons/UI/pause.png</file>
-        <file>icons/UI/settings.png</file>
+        <file>resources/icons/new.png</file>
+        <file>resources/icons/stop.png</file>
+        <file>resources/icons/UI/close.png</file>
+        <file>resources/icons/UI/downloads.png</file>
+        <file>resources/icons/UI/open.png</file>
+        <file>resources/icons/UI/pause.png</file>
+        <file>resources/icons/UI/settings.png</file>
     </qresource>
 </RCC>

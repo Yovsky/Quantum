@@ -1,7 +1,7 @@
 #ifndef DOWNLOADINFO_H
 #define DOWNLOADINFO_H
 
-#include "downloadstatus.h"
+#include "src/models/downloadstatus.h"
 #include <QWidget>
 #include <QPushButton>
 

@@ -11,33 +11,33 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    appglobals.cpp \
-    downloader.cpp \
-    downloadinfo.cpp \
-    downloadwindow.cpp \
-    downloadworker.cpp \
-    finishwindow.cpp \
-    main.cpp \
-    qdman.cpp \
-    urldialog.cpp
+    src/core/appglobals.cpp \
+    src/core/downloader.cpp \
+    src/ui/downloadinfo.cpp \
+    src/ui/downloadwindow.cpp \
+    src/core/downloadworker.cpp \
+    src/ui/finishwindow.cpp \
+    src/core/main.cpp \
+    src/ui/qdman.cpp \
+    src/ui/urldialog.cpp
 
 HEADERS += \
-    appglobals.h \
-    downloader.h \
-    downloadinfo.h \
-    downloadstatus.h \
-    downloadwindow.h \
-    downloadworker.h \
-    finishwindow.h \
-    qdman.h \
-    urldialog.h
+    src/core/appglobals.h \
+    src/core/downloader.h \
+    src/ui/downloadinfo.h \
+    src/models/downloadstatus.h \
+    src/ui/downloadwindow.h \
+    src/core/downloadworker.h \
+    src/ui/finishwindow.h \
+    src/ui/qdman.h \
+    src/ui/urldialog.h
 
 FORMS += \
-    downloadinfo.ui \
-    downloadwindow.ui \
-    finishwindow.ui \
-    qdman.ui \
-    urldialog.ui
+    src/ui/downloadinfo.ui \
+    src/ui/downloadwindow.ui \
+    src/ui/finishwindow.ui \
+    src/ui/qdman.ui \
+    src/ui/urldialog.ui
 
 TRANSLATIONS += \
     Quantum_en_US.ts

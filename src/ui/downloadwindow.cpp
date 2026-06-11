@@ -16,10 +16,10 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "appglobals.h"
-#include "downloadwindow.h"
+#include "src/core/appglobals.h"
+#include "src/ui/downloadwindow.h"
 #include "ui_downloadwindow.h"
-#include "downloader.h"
+#include "src/core/downloader.h"
 #include "finishwindow.h"
 #include <QMessageBox>
 #include <QSystemTrayIcon>

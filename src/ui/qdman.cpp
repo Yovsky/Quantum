@@ -16,12 +16,12 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "qdman.h"
-#include "appglobals.h"
-#include "downloadinfo.h"
-#include "downloadwindow.h"
+#include "src/ui/qdman.h"
+#include "src/core/appglobals.h"
+#include "src/ui/downloadinfo.h"
+#include "src/ui/downloadwindow.h"
 #include "ui_qdman.h"
-#include "urldialog.h"
+#include "src/ui/urldialog.h"
 #include <QJsonArray>
 
 QDMan::QDMan(QWidget *parent)
