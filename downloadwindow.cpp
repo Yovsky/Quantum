@@ -71,13 +71,32 @@ void DownloadWindow::startDownload(const QUrl &url, const QString &savePath, int
 void DownloadWindow::Resume(downloadInformations info)
 {
     ui->adress->setText(info.url);
-    ui->progressBar->setValue(info.progress);
+    ui->progressBar->setValue(static_cast<int>(info.progress));
     Status = "Resuming...";
     ui->status->setText(Status);
 
-    downloadTimer.start();
-    DownloadDate = QDateTime::currentDateTime().toString("dd/MM/yyy hh:mm:ss");
+    fileUrl = info.url;
+    filePath = info.savePath;
+
+    qint64 currentBytes = 0;
+    for (qint64 c : info.chunkProgress) currentBytes += c;
+    lastDownloaded = currentBytes;
+    lastBytesReceived = currentBytes;
     lastUpdateTime = QTime::currentTime();
+
+    if (currentBytes < 1024)
+        Recmsg = QString::number(currentBytes) + " B";
+    else if (currentBytes < 1024 * 1024)
+        Recmsg = QString::number(currentBytes / 1024.0, 'f', 2) + " KB";
+    else if (currentBytes < 1024 * 1024 * 1024)
+        Recmsg = QString::number(currentBytes / (1024.0 * 1024.0), 'f', 2) + " MB";
+    else
+        Recmsg = QString::number(currentBytes / (1024.0 * 1024.0 * 1024.0), 'f', 2) + " GB";
+
+    ui->downloaded->setText(Recmsg);
+
+    DownloadDate = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
+    downloadTimer.start();
     download->downloadResume(info);
 }
 
@@ -284,9 +303,15 @@ void DownloadWindow::on_Pause_clicked()
     else
     {
         isPaused = false;
-        download->downloadResume(Info);
         ui->Pause->setText("Pause");
         Status = "Downloading...";
+
+        qint64 currentBytes = download->bytesDownloaded();
+        lastDownloaded = currentBytes;
+        lastBytesReceived = currentBytes;
+        lastUpdateTime = QTime::currentTime();
+
+        download->downloadResume(Info);
     }
     ui->status->setText(Status);
 }

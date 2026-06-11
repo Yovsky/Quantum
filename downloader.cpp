@@ -459,3 +459,8 @@ QVector<qint64> Downloader::chunkProgressData()
 {
     return chunkProgress;
 }
+
+qint64 Downloader::bytesDownloaded()
+{
+    return m_bytesDownloaded;
+}

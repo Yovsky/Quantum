@@ -54,6 +54,7 @@ public:
     int chunkNumber();
     QVector<qint64> chunkProgressData();
     QString downloadID();
+    qint64 bytesDownloaded();
 signals:
     void downloadStarted();
     void progressChanged(qint64 bytesRecived, qint64 bytesTotal);
