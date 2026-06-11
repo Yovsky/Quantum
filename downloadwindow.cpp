@@ -214,13 +214,6 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 
 void DownloadWindow::GatherDownloadInfo()
 {
-    // QString Info = QFileInfo(filePath).fileName() + "|";
-    // Info += Size + "|";
-    // Info += Status + "|";
-    // Info += Transfer + "|";
-    // Info += DownloadDate + "|";
-    // Info += QString::number(Progress, 'f', 0);
-
     Info.fileName = QFileInfo(filePath).fileName();
     Info.fileSize = Size;
     Info.speed = Transfer;
@@ -275,6 +268,7 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
 
 void DownloadWindow::downloadStop()
 {
+    disconnect(download, nullptr, this, nullptr);
     download->downloadStop();
     this->close();
 }
@@ -286,6 +280,7 @@ DownloadWindow::~DownloadWindow()
 
 void DownloadWindow::on_Cancel_clicked()
 {
+    ui->status->setText("Stopping download...");
     downloadStop();
 }
 

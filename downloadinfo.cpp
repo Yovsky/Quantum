@@ -7,13 +7,6 @@ DownloadInfo::DownloadInfo(QWidget *parent)
 {
     ui->setupUi(this);
     setFixedHeight(70);
-    // if (Type == "Downloading")
-    //     Downloading(Info);
-    // else if (Type == "Paused")
-    //     Paused(Info);
-    // else if (Type == "Finished")
-    //     Finished(Info);
-
 }
 
 void DownloadInfo::Downloading(QString Data)

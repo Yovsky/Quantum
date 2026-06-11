@@ -28,24 +28,6 @@ Downloader::Downloader(QObject *parent) : QObject(parent)
 
 void Downloader::download(const QUrl &url, const QString &savePath, int chunkNumber, const QString &SHA256)
 {
-    // file.setFileName(savePath);
-    // SavePath = savePath;
-
-    // if(!file.open(QIODevice::WriteOnly))
-    // {
-    //     emit downloadFinished(false, "File not downloaded, error: " + file.errorString());
-    //     return;
-    // }
-
-    // QNetworkRequest request(url);
-    // reply = manager->get(request);
-
-    // connect(reply, &QIODevice::readyRead, this, &Downloader::onReadReady);
-    // connect(reply, &QNetworkReply::finished, this, &Downloader::onDownloadFinished);
-    // connect(reply, &QNetworkReply::downloadProgress, this, &Downloader::progressChanged);
-
-    // emit downloadStarted();
-
     m_savePath = savePath;
     m_url = QUrl(url);
     m_chunkNumber = chunkNumber;
@@ -414,6 +396,19 @@ void Downloader::downloadStop()
 {
     isPausing = false;
     if (saveTimer) saveTimer->stop();
+
+    for (DownloadWorker *worker : m_workers)
+        QMetaObject::invokeMethod(worker, "Stop", Qt::QueuedConnection);
+
+    for (QThread *thread : m_workerThreads)
+    {
+        thread->quit();
+        thread->wait(3000);
+    }
+
+    m_workers.clear();
+    m_workerThreads.clear();
+
     if (reply)
     {
         QNetworkReply *r = reply;
@@ -422,7 +417,13 @@ void Downloader::downloadStop()
         r->deleteLater();
     }
     if (file.isOpen()) file.close();
-    file.remove();
+
+    for (const QString &tempPath : m_tempPaths)
+        QFile::remove(tempPath);
+    QDir tempDir(m_qdmTempDir + "/" + m_downloadID);
+    tempDir.removeRecursively();
+
+    m_tempPaths.clear();
 }
 
 void Downloader::downloadPause()
