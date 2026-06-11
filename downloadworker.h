@@ -29,6 +29,8 @@ private:
     int retryMax = 3;
     bool m_isResuming = false;
     bool m_Stopped = false;
+    QByteArray m_writeBuffer;
+    static constexpr qint64 BUFFER_SIZE = 4 * 1024 * 1024;
 
     QNetworkAccessManager *manager = nullptr;
     QNetworkReply *reply = nullptr;

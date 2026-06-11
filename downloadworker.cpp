@@ -48,6 +48,11 @@ void DownloadWorker::StartDownload()
 void DownloadWorker::Stop()
 {
     m_Stopped = true;
+    if (!m_writeBuffer.isEmpty())
+    {
+        m_file.write(m_writeBuffer);
+        m_writeBuffer.clear();
+    }
     if (reply)
         reply->abort();
 }
@@ -55,12 +60,23 @@ void DownloadWorker::Stop()
 void DownloadWorker::OnReadReady()
 {
     QByteArray data = reply->readAll();
-    m_file.write(data);
+    m_writeBuffer.append(data);
     emit Progress(m_chunkIndex, data.size());
+    if (m_writeBuffer.size() >= BUFFER_SIZE)
+    {
+        m_file.write(m_writeBuffer);
+        m_writeBuffer.clear();
+    }
 }
 
 void DownloadWorker::OnReplyFinished()
 {
+    if (!m_writeBuffer.isEmpty())
+    {
+        m_file.write(m_writeBuffer);
+        m_writeBuffer.clear();
+    }
+
     auto error = reply->error();
     m_file.close();
     QString errorStr = reply->errorString();
@@ -74,7 +90,10 @@ void DownloadWorker::OnReplyFinished()
         return;
     }
 
-    if(error != QNetworkReply::NoError)
+    qDebug() << "Chunk" << m_chunkIndex << "finished with error:"
+             << error << errorStr << "status:" << status;
+
+    if (error != QNetworkReply::NoError)
     {
         if (retryCount < retryMax)
         {
@@ -91,6 +110,6 @@ void DownloadWorker::OnReplyFinished()
     else
     {
         retryCount = 0;
-        emit Finished();    
+        emit Finished();
     }
 }
