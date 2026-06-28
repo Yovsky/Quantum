@@ -56,18 +56,10 @@ signals:
 private:
     Ui::DownloadWindow *ui;
     Downloader *download;
-    QString filePath;
-    QString Status;
-    QString Transfer;
-    QString Size;
-    QString DownloadDate;
-    QString Recmsg;
-    double Progress;
     QElapsedTimer downloadTimer;
     qint64 lastBytesReceived = 0;
     QTime lastUpdateTime;
-    QString fileUrl;
-    downloadInformations Info;
+    downloadInformations info;
     bool isPaused = false;
     qint64 lastProgress = 0;
     qint64 lastDownloaded = 0;

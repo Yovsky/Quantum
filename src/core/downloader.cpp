@@ -26,20 +26,18 @@ Downloader::Downloader(QObject *parent) : QObject(parent)
     manager = new QNetworkAccessManager(this);
 }
 
-void Downloader::download(const QUrl &url, const QString &savePath, int chunkNumber, const QString &SHA256)
+void Downloader::download(downloadInformations Info)
 {
-    m_savePath = savePath;
-    m_url = QUrl(url);
-    m_chunkNumber = chunkNumber;
+    info = Info;
     m_chunksCompleted = 0;
     m_bytesDownloaded = 0;
     m_tempPaths.clear();
-    m_SHA256 = SHA256;
+    m_url = QUrl(Info.url);
 
     m_qdmTempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/Quantum";
-    m_downloadID = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    info.ID = QUuid::createUuid().toString(QUuid::WithoutBraces);
     QDir dir;
-    dir.mkpath(m_qdmTempDir + "/" + m_downloadID);
+    dir.mkpath(m_qdmTempDir + "/" + info.ID);
 
     QNetworkRequest request(m_url);
     QNetworkReply *reply = manager->head(request);
@@ -56,14 +54,14 @@ void Downloader::onHeadFinished()
         qDebug() << "Failed to contact target host server:" << reply->errorString();
         return;
     }
-    m_filesize = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
-    if (m_filesize <= 0) m_chunkNumber = 1;
-    if (m_filesize < 1024 * 1024 * 10) m_chunkNumber = 1;
+    info.fileByteSize = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
+    if (info.fileByteSize <= 0) info.chunkCount = 1;
+    if (info.fileByteSize < 1024 * 1024 * 10) info.chunkCount = 1;
 
     QByteArray acceptRanges = reply->rawHeader("Accept-Ranges");
-    if (acceptRanges.toLower().contains("bytes") || m_chunkNumber == 1)
+    if (acceptRanges.toLower().contains("bytes") || info.chunkCount == 1)
     {
-        chunkProgress.resize(m_chunkNumber);
+        chunkProgress.resize(info.chunkCount);
         WriteDownloadData();
         StartDataTimer();
         SetupWorkers();
@@ -84,10 +82,10 @@ void Downloader::onHeadTestFinished()
     if (!test) return;
     test->deleteLater();
     if (test->error() != QNetworkReply::NoError)
-        m_chunkNumber = 1;
+        info.chunkCount = 1;
     else if (test->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 206)
-        m_chunkNumber = 1;
-    chunkProgress.resize(m_chunkNumber);
+        info.chunkCount = 1;
+    chunkProgress.resize(info.chunkCount);
     WriteDownloadData();
     StartDataTimer();
     SetupWorkers();
@@ -95,7 +93,7 @@ void Downloader::onHeadTestFinished()
 
 void Downloader::WriteDownloadData()
 {
-    QFile dataFile(m_qdmTempDir + "/" + m_downloadID + "/" + QFileInfo(m_savePath).fileName() + ".qdmtemp");
+    QFile dataFile(m_qdmTempDir + "/" + info.ID + "/" + QFileInfo(info.savePath).fileName() + ".qdmtemp");
     if (!dataFile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
         emit downloadFinished(false, "Failed to store download data.");
@@ -104,10 +102,10 @@ void Downloader::WriteDownloadData()
 
     QJsonObject root;
     root["url"] = m_url.toString();
-    root["downloadID"] = m_downloadID;
-    root["savePath"] = m_savePath;
-    root["chunkCount"] = m_chunkNumber;
-    root["fileSize"] = m_filesize;
+    root["downloadID"] = info.ID;
+    root["savePath"] = info.savePath;
+    root["chunkCount"] = info.chunkCount;
+    root["fileSize"] = info.fileByteSize;
 
     QJsonArray chunks;
     for (qint64 progress : chunkProgress)
@@ -120,8 +118,8 @@ void Downloader::WriteDownloadData()
 
     // Used .qdmtemp then renamed it to ensure .qdmdata is created successfully and is not corrupted.
     dataFile.close();
-    QFile::remove(m_qdmTempDir + "/" + m_downloadID + "/" + QFileInfo(m_savePath).fileName() + ".qdmdata");
-    if (!dataFile.rename(m_qdmTempDir + "/" + m_downloadID + "/" + QFileInfo(m_savePath).fileName() + ".qdmdata"))
+    QFile::remove(m_qdmTempDir + "/" + info.ID + "/" + QFileInfo(info.savePath).fileName() + ".qdmdata");
+    if (!dataFile.rename(m_qdmTempDir + "/" + info.ID + "/" + QFileInfo(info.savePath).fileName() + ".qdmdata"))
     {
         emit downloadFinished(false, "Failed to store download data.");
         return;
@@ -140,13 +138,13 @@ void Downloader::StartDataTimer()
 
 void Downloader::SetupWorkers()
 {
-    qint64 chunkSize = m_filesize / m_chunkNumber;
-    for (int i = 0; i < m_chunkNumber; i++)
+    qint64 chunkSize = info.fileByteSize / info.chunkCount;
+    for (int i = 0; i < info.chunkCount; i++)
     {
         qint64 start = i * chunkSize;
-        qint64 end = (i == m_chunkNumber - 1) ? m_filesize - 1 : start + chunkSize - 1;
+        qint64 end = (i == info.chunkCount - 1) ? info.fileByteSize - 1 : start + chunkSize - 1;
 
-        QString tempPath = m_qdmTempDir + "/" + m_downloadID + "/" + QString("chunk%1.qdm").arg(i);
+        QString tempPath = m_qdmTempDir + "/" + info.ID + "/" + QString("chunk%1.qdm").arg(i);
         m_tempPaths.append(tempPath);
         if (!isResuming)
             QFile::remove(tempPath);
@@ -180,14 +178,14 @@ void Downloader::onChunkProgress(int chunkIndex, qint64 bytes)
     m_bytesDownloaded += bytes;
     if (chunkIndex >= 0 && chunkIndex < chunkProgress.size())
         chunkProgress[chunkIndex] += bytes;
-    emit progressChanged(m_bytesDownloaded, m_filesize);
+    emit progressChanged(m_bytesDownloaded, info.fileByteSize);
 }
 
 void Downloader::onChunkFinished()
 {
     m_chunksCompleted++;
     if (isPausing) return;
-    if (m_chunksCompleted == m_chunkNumber)
+    if (m_chunksCompleted == info.chunkCount)
     {
         mergeTemporaryFiles();
     }
@@ -197,7 +195,7 @@ void Downloader::mergeTemporaryFiles()
 {
     if (saveTimer) saveTimer->stop();
 
-    QFile finalFile(m_savePath);
+    QFile finalFile(info.savePath);
     if (!finalFile.open(QIODevice::WriteOnly))
     {
         for (const QString &tempPath : m_tempPaths)
@@ -224,19 +222,19 @@ void Downloader::mergeTemporaryFiles()
     }
     finalFile.close();
 
-    qDebug() << "Merged size:" << totalWritten << "expected:" << m_filesize;
+    qDebug() << "Merged size:" << totalWritten << "expected:" << info.fileByteSize;
 
-    if (totalWritten != m_filesize)
+    if (totalWritten != info.fileByteSize)
     {
-        QFile::remove(m_savePath);
+        QFile::remove(info.savePath);
         emit downloadFinished(false, QString("File size mismatch: got %1, expected %2")
-                                         .arg(totalWritten).arg(m_filesize));
+                                         .arg(totalWritten).arg(info.fileByteSize));
         return;
     }
 
-    if (!m_SHA256.isEmpty())
+    if (!info.SHA256.isEmpty())
     {
-        QFile verFile(m_savePath);
+        QFile verFile(info.savePath);
         if (!verFile.open(QIODevice::ReadOnly))
         {
             emit downloadFinished(false, "Failed to verify file hash.");
@@ -244,17 +242,17 @@ void Downloader::mergeTemporaryFiles()
         }
 
         QByteArray hash = QCryptographicHash::hash(verFile.readAll(), QCryptographicHash::Sha256);
-        if (hash.toHex().toLower() != m_SHA256.toLower())
+        if (hash.toHex().toLower() != info.SHA256.toLower())
         {
             verFile.close();
-            QFile::remove(m_savePath);
+            QFile::remove(info.savePath);
             emit downloadFinished(false, "File hash does not meet provided hash.");
             return;
         }
         verFile.close();
     }
 
-    QDir tempDir(m_qdmTempDir + "/" + m_downloadID);
+    QDir tempDir(m_qdmTempDir + "/" + info.ID);
     tempDir.removeRecursively();
     emit downloadFinished(true, "Download completed successfully.");
 }
@@ -305,33 +303,30 @@ void Downloader::onDownloadFinished()
     senderReply->deleteLater();
 }
 
-void Downloader::downloadResume(downloadInformations info)
+void Downloader::downloadResume(downloadInformations Info)
 {
+    info = Info;
     isPausing = false;
     m_workers.clear();
     m_workerThreads.clear();
-    m_savePath = info.savePath;
     m_url = QUrl(info.url);
-    m_chunkNumber = info.chunkCount;
     m_chunksCompleted = 0;
     m_tempPaths.clear();
-    m_filesize = info.fileByteSize;
-    m_downloadID = info.ID;
     m_qdmTempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
                    + "/Quantum";
     isResuming = true;
 
     m_bytesDownloaded = 0;
-    chunkProgress.resize(m_chunkNumber);
+    chunkProgress.resize(info.chunkCount);
 
     QNetworkRequest req(m_url);
     QNetworkReply *headReply = manager->head(req);
-    connect(headReply, &QNetworkReply::finished, this, [this, headReply, info]() mutable {
+    connect(headReply, &QNetworkReply::finished, this, [this, headReply, Info]() mutable {
     headReply->deleteLater();
     qint64 freshSize = headReply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
-    if (freshSize > 0 && freshSize != m_filesize)
+    if (freshSize > 0 && freshSize != info.fileByteSize)
     {
-        qDebug() << "File size changed on server! Was:" << m_filesize << "Now:" << freshSize;
+        qDebug() << "File size changed on server! Was:" << info.fileByteSize << "Now:" << freshSize;
         emit downloadFinished(false, "File changed on server, cannot resume.");
         return;
     }
@@ -389,7 +384,7 @@ void Downloader::downloadResume(downloadInformations info)
 
     StartDataTimer();
 
-    emit progressChanged(m_bytesDownloaded, m_filesize);
+    emit progressChanged(m_bytesDownloaded, info.fileByteSize);
 }
 
 void Downloader::downloadStop()
@@ -420,7 +415,7 @@ void Downloader::downloadStop()
 
     for (const QString &tempPath : m_tempPaths)
         QFile::remove(tempPath);
-    QDir tempDir(m_qdmTempDir + "/" + m_downloadID);
+    QDir tempDir(m_qdmTempDir + "/" + info.ID);
     tempDir.removeRecursively();
 
     m_tempPaths.clear();
@@ -443,17 +438,17 @@ void Downloader::downloadPause()
 
 qint64 Downloader::fileSize()
 {
-    return m_filesize;
+    return info.fileByteSize;
 }
 
 int Downloader::chunkNumber()
 {
-    return m_chunkNumber;
+    return info.chunkCount;
 }
 
 QString Downloader::downloadID()
 {
-    return m_downloadID;
+    return info.ID;
 }
 
 QVector<qint64> Downloader::chunkProgressData()

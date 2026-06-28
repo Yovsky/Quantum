@@ -4,6 +4,7 @@
 #include <QString>
 #include <QMetaType>
 #include <QList>
+#include <QFile>
 
 /*
 * struct DownloadStatus
@@ -46,6 +47,7 @@ struct downloadInformations
     qint64 fileByteSize;
     int chunkCount;
     QVector<qint64> chunkProgress;
+    QString SHA256;
 };
 
 Q_DECLARE_METATYPE(downloadInformations)
