@@ -60,6 +60,7 @@ void DownloadWindow::startDownload(const QUrl &url, const QString &savePath, int
 
     fileUrl = finalUrl.toString();
     filePath = savePath;
+    this->setWindowTitle(QFileInfo(filePath).fileName());
 
     downloadTimer.start();
     lastBytesReceived = 0;
@@ -70,6 +71,7 @@ void DownloadWindow::startDownload(const QUrl &url, const QString &savePath, int
 
 void DownloadWindow::Resume(downloadInformations info)
 {
+    this->setWindowTitle(info.fileName);
     ui->adress->setText(info.url);
     ui->progressBar->setValue(static_cast<int>(info.progress));
     Status = "Resuming...";
@@ -111,6 +113,7 @@ void DownloadWindow::onProgressChange(qint64 bytesReceived, qint64 bytesTotal)
 
     Progress = (static_cast<double>(lastDownloaded) / bytesTotal) * 100.0;
     ui->progressBar->setValue(static_cast<int>(Progress));
+    ui->status->setText("Downloading...");
 
     double Received = 0;
     double Total = 0;
