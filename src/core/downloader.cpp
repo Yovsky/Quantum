@@ -39,6 +39,10 @@ void Downloader::download(downloadInformations Info)
     QDir dir;
     dir.mkpath(m_qdmTempDir + "/" + info.ID);
 
+    info.tempPath = m_qdmTempDir + "/" + info.fileName + ".qdm";
+    m_file.setFileName(info.tempPath);
+    m_file.resize(info.fileByteSize);
+
     QNetworkRequest request(m_url);
     QNetworkReply *reply = manager->head(request);
     connect (reply, &QNetworkReply::finished, this, &Downloader::onHeadFinished);
@@ -55,12 +59,12 @@ void Downloader::onHeadFinished()
         return;
     }
     info.fileByteSize = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
-    if (info.fileByteSize <= 0) info.chunkCount = 1;
     if (info.fileByteSize < 1024 * 1024 * 10) info.chunkCount = 1;
 
     QByteArray acceptRanges = reply->rawHeader("Accept-Ranges");
     if (acceptRanges.toLower().contains("bytes") || info.chunkCount == 1)
     {
+        qDebug() << "chunk count :" + QString::number(info.chunkCount);
         chunkProgress.resize(info.chunkCount);
         WriteDownloadData();
         StartDataTimer();
@@ -150,7 +154,7 @@ void Downloader::SetupWorkers()
             QFile::remove(tempPath);
 
         QThread *workerThread = new QThread(this);
-        DownloadWorker *worker = new DownloadWorker(m_url, i, start, end, tempPath, false);
+        DownloadWorker *worker = new DownloadWorker(m_url, i, start, end, tempPath, false, info);
         worker->moveToThread(workerThread);
 
         m_workers.append(worker);
@@ -187,7 +191,10 @@ void Downloader::onChunkFinished()
     if (isPausing) return;
     if (m_chunksCompleted == info.chunkCount)
     {
-        mergeTemporaryFiles();
+        //mergeTemporaryFiles();
+        m_file.rename(info.savePath);
+        // change this later !!!
+        emit downloadFinished(true, "Download completed successfully.");
     }
 }
 
@@ -359,7 +366,7 @@ void Downloader::downloadResume(downloadInformations Info)
                  << "start:" << start << "end:" << end;
 
         QThread *workerThread = new QThread(this);
-        DownloadWorker *worker = new DownloadWorker(info.url, i, start, end, tempPath, true);
+        DownloadWorker *worker = new DownloadWorker(info.url, i, start, end, tempPath, true, info);
         worker->moveToThread(workerThread);
 
         m_workers.append(worker);

@@ -44,6 +44,7 @@ struct downloadInformations
     QString ID;
     QString url;
     QString savePath;
+    QString tempPath;
     qint64 fileByteSize;
     int chunkCount;
     QVector<qint64> chunkProgress;

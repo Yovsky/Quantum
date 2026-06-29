@@ -84,6 +84,7 @@ private:
     bool isResuming;
     QStringList m_tempPaths;
     downloadInformations info;
+    QFile m_file;
 };
 
 #endif // DOWNLOADER_H

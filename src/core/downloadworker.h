@@ -1,6 +1,7 @@
 #ifndef DOWNLOADWORKER_H
 #define DOWNLOADWORKER_H
 
+#include "src/models/downloadstatus.h"
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -13,7 +14,7 @@ public slots:
     void StartDownload();
     void Stop();
 public:
-    explicit DownloadWorker(const QUrl& url, int chunkIndex, qint64 start, qint64 end, const QString &tempPath, bool isResuming);
+    explicit DownloadWorker(const QUrl& url, int chunkIndex, qint64 start, qint64 end, const QString &tempPath, bool isResuming, downloadInformations Info);
 private slots:
     void OnReadReady();
     void OnReplyFinished();
@@ -31,6 +32,8 @@ private:
     bool m_Stopped = false;
     QByteArray m_writeBuffer;
     static constexpr qint64 BUFFER_SIZE = 4 * 1024 * 1024;
+    downloadInformations info;
+    qint64 m_downloadOffset;
 
     QNetworkAccessManager *manager = nullptr;
     QNetworkReply *reply = nullptr;

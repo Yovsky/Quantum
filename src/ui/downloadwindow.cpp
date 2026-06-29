@@ -55,6 +55,7 @@ void DownloadWindow::startDownload(const QUrl &url, const QString &savePath, int
         finalUrl.setScheme("http");
     info.url = finalUrl.toString();
     info.savePath = savePath;
+    info.chunkCount = threadNumber;
 
     ui->adress->setText(info.url);
     ui->progressBar->setValue(0);
