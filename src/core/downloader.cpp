@@ -191,53 +191,15 @@ void Downloader::onChunkFinished()
     if (isPausing) return;
     if (m_chunksCompleted == info.chunkCount)
     {
-        //mergeTemporaryFiles();
-        m_file.rename(info.savePath);
-        // change this later !!!
-        emit downloadFinished(true, "Download completed successfully.");
+        handleDownloadFinish();
     }
 }
 
-void Downloader::mergeTemporaryFiles()
+void Downloader::handleDownloadFinish()
 {
     if (saveTimer) saveTimer->stop();
 
-    QFile finalFile(info.savePath);
-    if (!finalFile.open(QIODevice::WriteOnly))
-    {
-        for (const QString &tempPath : m_tempPaths)
-            QFile::remove(tempPath);
-        emit downloadFinished(false, "Cannot open output file for writing.");
-        return;
-    }
-
-    qint64 totalWritten = 0;
-    for (const QString &tempPath : m_tempPaths)
-    {
-        QFile tempFile(tempPath);
-        if (!tempFile.open(QIODevice::ReadOnly))
-        {
-            finalFile.close();
-            emit downloadFinished(false, "Failed while merging chunks: " + tempPath);
-            return;
-        }
-        QByteArray data = tempFile.readAll();
-        finalFile.write(data);
-        totalWritten += data.size();
-        tempFile.close();
-        QFile::remove(tempPath);
-    }
-    finalFile.close();
-
-    qDebug() << "Merged size:" << totalWritten << "expected:" << info.fileByteSize;
-
-    if (totalWritten != info.fileByteSize)
-    {
-        QFile::remove(info.savePath);
-        emit downloadFinished(false, QString("File size mismatch: got %1, expected %2")
-                                         .arg(totalWritten).arg(info.fileByteSize));
-        return;
-    }
+    m_file.rename(info.savePath);
 
     if (!info.SHA256.isEmpty())
     {
@@ -259,7 +221,7 @@ void Downloader::mergeTemporaryFiles()
         verFile.close();
     }
 
-    QDir tempDir(m_qdmTempDir + "/" + info.ID);
+    QDir tempDir(m_qdmTempDir + "/" + info.fileName + ".qdm");
     tempDir.removeRecursively();
     emit downloadFinished(true, "Download completed successfully.");
 }

@@ -66,8 +66,8 @@ private slots:
     void onChunkFinished();
     void onReadReady();
     void onDownloadFinished();
+    void handleDownloadFinish();
 private:
-    void mergeTemporaryFiles();
     QNetworkAccessManager *manager;
     QNetworkReply *reply;
     QFile file;
