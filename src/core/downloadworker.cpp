@@ -1,35 +1,33 @@
 #include "downloadworker.h"
 
-DownloadWorker::DownloadWorker(const QUrl &url, int chunkIndex, qint64 start, qint64 end, const QString &tempPath, bool isResuming)
-    : m_url(url), m_start(start), m_end(end), m_tempPath(tempPath), m_chunkIndex(chunkIndex), m_isResuming(isResuming) {}
+DownloadWorker::DownloadWorker(int chunkIndex, qint64 start, qint64 end, bool isResuming, downloadInformations Info)
+    : m_start(start)
+    , m_end(end)
+    , m_chunkIndex(chunkIndex)
+    , m_isResuming(isResuming)
+    , info(Info)
+{}
 
 void DownloadWorker::StartDownload()
 {
     m_Stopped = false;
     qDebug() << "StartDownload called for chunk" << m_chunkIndex;
-    m_file.setFileName(m_tempPath);
+    m_file.setFileName(info.tempPath);
 
-    if (m_isResuming)
+    qDebug() << "fileName" + info.fileName;
+
+    m_downloadOffset = m_start;
+
+    if (!m_file.open(QIODevice::ReadWrite))
     {
-        if (!m_file.open(QIODevice::WriteOnly | QIODevice::Append))
-        {
-            emit ErrorOcc(m_file.errorString());
-            return;
-        }
-    }
-    else
-    {
-        if (!m_file.open(QIODevice::WriteOnly | QIODevice::Truncate))
-        {
-            emit ErrorOcc(m_file.errorString());
-            return;
-        }
+        emit ErrorOcc(m_file.errorString());
+        return;
     }
 
     if (!manager)
         manager = new QNetworkAccessManager(this);
 
-    QNetworkRequest request(m_url);
+    QNetworkRequest request(info.url);
     QByteArray rangeHeader = "bytes=" + QByteArray::number(m_start) + "-" + QByteArray::number(m_end);
     request.setRawHeader("Range", rangeHeader);
 
@@ -42,14 +40,16 @@ void DownloadWorker::StartDownload()
 
 void DownloadWorker::Stop()
 {
+    if (m_Stopped)
+        return;
+
     m_Stopped = true;
-    if (!m_writeBuffer.isEmpty())
-    {
-        m_file.write(m_writeBuffer);
-        m_writeBuffer.clear();
-    }
+
     if (reply)
         reply->abort();
+
+    if (manager)
+        manager->disconnect(this);
 }
 
 void DownloadWorker::OnReadReady()
@@ -61,7 +61,9 @@ void DownloadWorker::OnReadReady()
 
     if (m_writeBuffer.size() >= BUFFER_SIZE)
     {
+        m_file.seek(m_downloadOffset);
         m_file.write(m_writeBuffer);
+        m_downloadOffset += m_writeBuffer.size();
         m_writeBuffer.clear();
     }
 }
@@ -70,6 +72,7 @@ void DownloadWorker::OnReplyFinished()
 {
     if (!m_writeBuffer.isEmpty())
     {
+        m_file.seek(m_downloadOffset);
         m_file.write(m_writeBuffer);
         m_writeBuffer.clear();
     }

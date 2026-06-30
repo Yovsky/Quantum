@@ -25,6 +25,7 @@
 #include <QUrl>
 #include <QElapsedTimer>
 #include <QDebug>
+#include <QCloseEvent>
 
 namespace Ui {
 class DownloadWindow;
@@ -36,7 +37,7 @@ class DownloadWindow : public QWidget
 
 public:
     explicit DownloadWindow(QWidget *parent = nullptr);
-    void startDownload(const QUrl &url, const QString &savePath, int threadNumber, const QString &SHA256);
+    void startDownload(downloadInformations Info);
     void GatherDownloadInfo();
     void Resume(downloadInformations info);
     ~DownloadWindow();
@@ -53,22 +54,18 @@ private slots:
 signals:
     void DownloadInfo(const downloadInformations& Info);
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 private:
     Ui::DownloadWindow *ui;
     Downloader *download;
-    QString filePath;
-    QString Status;
-    QString Transfer;
-    QString Size;
-    QString DownloadDate;
-    QString Recmsg;
-    double Progress;
     QElapsedTimer downloadTimer;
     qint64 lastBytesReceived = 0;
     QTime lastUpdateTime;
-    QString fileUrl;
-    downloadInformations Info;
+    downloadInformations info;
     bool isPaused = false;
+    bool didStop = false;
     qint64 lastProgress = 0;
     qint64 lastDownloaded = 0;
 };

@@ -17,8 +17,8 @@
 */
 
 #include "appglobals.h"
-#include "qdman.h"
-#include "downloadwindow.h"
+#include "src/ui/qdman.h"
+#include "src/ui/downloadwindow.h"
 
 AppGlobals::AppGlobals() : QObject(nullptr)
 {
