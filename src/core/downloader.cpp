@@ -149,7 +149,7 @@ void Downloader::SetupWorkers()
         qint64 end = (i == info.chunkCount - 1) ? info.fileByteSize - 1 : start + chunkSize - 1;
 
         QThread *workerThread = new QThread(this);
-        DownloadWorker *worker = new DownloadWorker(m_url, i, start, end, false, info);
+        DownloadWorker *worker = new DownloadWorker(i, start, end, false, info);
         worker->moveToThread(workerThread);
 
         m_workers.append(worker);
@@ -280,7 +280,7 @@ void Downloader::downloadResume(downloadInformations Info)
                    + "/Quantum";
     isResuming = true;
 
-    info.tempPath = m_qdmTempDir + "/" + info.fileName + ".qdm";
+    info.tempPath = m_qdmTempDir + "/" + info.ID + "/" + info.fileName + ".qdm";
     m_file.setFileName(info.tempPath);
     m_file.resize(info.fileByteSize);
 
@@ -320,7 +320,7 @@ void Downloader::downloadResume(downloadInformations Info)
         qint64 end = chunkEnd;
 
         QThread *workerThread = new QThread(this);
-        DownloadWorker *worker = new DownloadWorker(info.url, i, start, end, true, info);
+        DownloadWorker *worker = new DownloadWorker(i, start, end, true, info);
         worker->moveToThread(workerThread);
 
         m_workers.append(worker);

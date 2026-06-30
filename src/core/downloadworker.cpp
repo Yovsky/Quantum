@@ -1,8 +1,7 @@
 #include "downloadworker.h"
 
-DownloadWorker::DownloadWorker(const QUrl &url, int chunkIndex, qint64 start, qint64 end, bool isResuming, downloadInformations Info)
-    : m_url(url)
-    , m_start(start)
+DownloadWorker::DownloadWorker(int chunkIndex, qint64 start, qint64 end, bool isResuming, downloadInformations Info)
+    : m_start(start)
     , m_end(end)
     , m_chunkIndex(chunkIndex)
     , m_isResuming(isResuming)
@@ -28,7 +27,7 @@ void DownloadWorker::StartDownload()
     if (!manager)
         manager = new QNetworkAccessManager(this);
 
-    QNetworkRequest request(m_url);
+    QNetworkRequest request(info.url);
     QByteArray rangeHeader = "bytes=" + QByteArray::number(m_start) + "-" + QByteArray::number(m_end);
     request.setRawHeader("Range", rangeHeader);
 

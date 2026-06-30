@@ -14,12 +14,11 @@ public slots:
     void StartDownload();
     void Stop();
 public:
-    explicit DownloadWorker(const QUrl& url, int chunkIndex, qint64 start, qint64 end, bool isResuming, downloadInformations Info);
+    explicit DownloadWorker(int chunkIndex, qint64 start, qint64 end, bool isResuming, downloadInformations Info);
 private slots:
     void OnReadReady();
     void OnReplyFinished();
 private:
-    QUrl m_url;
     qint64 m_start;
     qint64 m_end;
     QFile m_file;
