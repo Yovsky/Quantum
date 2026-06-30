@@ -15,6 +15,8 @@ public slots:
     void Stop();
 public:
     explicit DownloadWorker(int chunkIndex, qint64 start, qint64 end, bool isResuming, downloadInformations Info);
+
+    QNetworkReply *reply = nullptr;
 private slots:
     void OnReadReady();
     void OnReplyFinished();
@@ -34,7 +36,6 @@ private:
     qint64 m_downloadOffset;
 
     QNetworkAccessManager *manager = nullptr;
-    QNetworkReply *reply = nullptr;
 signals:
     void Progress(int chunkIndex, qint64 bytesRec);
     void Finished();

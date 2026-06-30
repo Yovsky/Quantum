@@ -29,6 +29,7 @@ Downloader::Downloader(QObject *parent) : QObject(parent)
 void Downloader::download(downloadInformations Info)
 {
     info = Info;
+    isCancelling = false;
     m_chunksCompleted = 0;
     m_bytesDownloaded = 0;
     m_tempPaths.clear();
@@ -166,6 +167,8 @@ void Downloader::SetupWorkers()
         connect(worker, &DownloadWorker::Finished, this, [this, worker, workerThread]() {
             m_workers.removeOne(worker);
             m_workerThreads.removeOne(workerThread);
+
+            workerThread->quit();
         });
 
         workerThread->start();
@@ -182,6 +185,7 @@ void Downloader::onChunkProgress(int chunkIndex, qint64 bytes)
 
 void Downloader::onChunkFinished()
 {
+    if (isCancelling) return;
     m_chunksCompleted++;
     if (isPausing) return;
     if (m_chunksCompleted == info.chunkCount)
@@ -271,6 +275,7 @@ void Downloader::downloadResume(downloadInformations Info)
 {
     info = Info;
     isPausing = false;
+    isCancelling = false;
     m_workers.clear();
     m_workerThreads.clear();
     m_url = QUrl(info.url);
@@ -327,7 +332,6 @@ void Downloader::downloadResume(downloadInformations Info)
         m_workerThreads.append(workerThread);
 
         connect(workerThread, &QThread::started, worker, &DownloadWorker::StartDownload);
-        connect(worker, &DownloadWorker::Finished, workerThread, &QThread::quit);
         connect(worker, &DownloadWorker::Finished, worker, &DownloadWorker::deleteLater);
         connect(workerThread, &QThread::finished, workerThread, &QThread::deleteLater);
         connect(worker, &DownloadWorker::Progress, this, &Downloader::onChunkProgress);
@@ -351,35 +355,36 @@ void Downloader::downloadResume(downloadInformations Info)
 void Downloader::downloadStop()
 {
     isPausing = false;
-    if (saveTimer) saveTimer->stop();
+    isCancelling = true;
 
+    if (saveTimer)
+        saveTimer->stop();
+
+    // ask every worker to stop.
     for (DownloadWorker *worker : m_workers)
         QMetaObject::invokeMethod(worker, "Stop", Qt::QueuedConnection);
 
-    for (QThread *thread : m_workerThreads)
+    // wait until every worker thread exits on its own.
+    QElapsedTimer timer;
+    timer.start();
+
+    while (!m_workerThreads.isEmpty() && timer.elapsed() < 3000)
     {
-        thread->quit();
-        thread->wait(3000);
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
     }
 
     m_workers.clear();
     m_workerThreads.clear();
 
-    if (reply)
-    {
-        QNetworkReply *r = reply;
-        reply = nullptr;
-        r->abort();
-        r->deleteLater();
-    }
-    if (file.isOpen()) file.close();
+    if (m_file.isOpen())
+        m_file.close();
 
-    for (const QString &tempPath : m_tempPaths)
-        QFile::remove(tempPath);
     QDir tempDir(m_qdmTempDir + "/" + info.ID);
     tempDir.removeRecursively();
 
     m_tempPaths.clear();
+
+    emit downloadFinished(false, "User canceled download");
 }
 
 void Downloader::downloadPause()

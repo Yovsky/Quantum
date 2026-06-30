@@ -257,7 +257,7 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
 
 void DownloadWindow::downloadStop()
 {
-    disconnect(download, nullptr, this, nullptr);
+    // disconnect(download, nullptr, this, nullptr);
     download->downloadStop();
     this->close();
 }

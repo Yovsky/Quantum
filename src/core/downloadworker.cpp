@@ -40,14 +40,16 @@ void DownloadWorker::StartDownload()
 
 void DownloadWorker::Stop()
 {
+    if (m_Stopped)
+        return;
+
     m_Stopped = true;
-    if (!m_writeBuffer.isEmpty())
-    {
-        m_file.write(m_writeBuffer);
-        m_writeBuffer.clear();
-    }
+
     if (reply)
         reply->abort();
+
+    if (manager)
+        manager->disconnect(this);
 }
 
 void DownloadWorker::OnReadReady()

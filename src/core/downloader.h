@@ -36,6 +36,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QCoreApplication>
 
 class Downloader : public QObject
 {
@@ -82,6 +83,7 @@ private:
     QVector<QThread*> m_workerThreads;
     bool isPausing = false;
     bool isResuming;
+    bool isCancelling = false;
     QStringList m_tempPaths;
     downloadInformations info;
     QFile m_file;
