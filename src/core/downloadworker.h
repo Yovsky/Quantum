@@ -14,7 +14,7 @@ public slots:
     void StartDownload();
     void Stop();
 public:
-    explicit DownloadWorker(const QUrl& url, int chunkIndex, qint64 start, qint64 end, const QString &tempPath, bool isResuming, downloadInformations Info);
+    explicit DownloadWorker(const QUrl& url, int chunkIndex, qint64 start, qint64 end, bool isResuming, downloadInformations Info);
 private slots:
     void OnReadReady();
     void OnReplyFinished();
@@ -22,7 +22,6 @@ private:
     QUrl m_url;
     qint64 m_start;
     qint64 m_end;
-    QString m_tempPath;
     QFile m_file;
     qint64 m_downloadedBytes = 0;
     int m_chunkIndex;

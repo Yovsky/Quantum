@@ -1,10 +1,9 @@
 #include "downloadworker.h"
 
-DownloadWorker::DownloadWorker(const QUrl &url, int chunkIndex, qint64 start, qint64 end, const QString &tempPath, bool isResuming, downloadInformations Info)
+DownloadWorker::DownloadWorker(const QUrl &url, int chunkIndex, qint64 start, qint64 end, bool isResuming, downloadInformations Info)
     : m_url(url)
     , m_start(start)
     , m_end(end)
-    , m_tempPath(tempPath)
     , m_chunkIndex(chunkIndex)
     , m_isResuming(isResuming)
     , info(Info)
@@ -15,6 +14,8 @@ void DownloadWorker::StartDownload()
     m_Stopped = false;
     qDebug() << "StartDownload called for chunk" << m_chunkIndex;
     m_file.setFileName(info.tempPath);
+
+    qDebug() << "fileName" + info.fileName;
 
     m_downloadOffset = m_start;
 

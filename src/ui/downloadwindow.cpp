@@ -47,15 +47,14 @@ DownloadWindow::DownloadWindow(QWidget *parent)
     isPaused = false;
 }
 
-void DownloadWindow::startDownload(const QUrl &url, const QString &savePath, int threadNumber, const QString &SHA256)
+void DownloadWindow::startDownload(downloadInformations Info)
 {
+    info = Info;
     info.status = "Starting Download...";
-    QUrl finalUrl = QUrl::fromUserInput(url.toString());
+    QUrl finalUrl = QUrl::fromUserInput(Info.url);
     if (finalUrl.scheme().isEmpty())
         finalUrl.setScheme("http");
     info.url = finalUrl.toString();
-    info.savePath = savePath;
-    info.chunkCount = threadNumber;
 
     ui->adress->setText(info.url);
     ui->progressBar->setValue(0);
@@ -67,7 +66,6 @@ void DownloadWindow::startDownload(const QUrl &url, const QString &savePath, int
     lastBytesReceived = 0;
     info.Date = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
     lastUpdateTime = QTime::currentTime();
-    info.SHA256 = SHA256;
     download->download(info);
 
 }

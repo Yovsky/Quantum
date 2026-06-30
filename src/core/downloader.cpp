@@ -148,13 +148,8 @@ void Downloader::SetupWorkers()
         qint64 start = i * chunkSize;
         qint64 end = (i == info.chunkCount - 1) ? info.fileByteSize - 1 : start + chunkSize - 1;
 
-        QString tempPath = m_qdmTempDir + "/" + info.ID + "/" + QString("chunk%1.qdm").arg(i);
-        m_tempPaths.append(tempPath);
-        if (!isResuming)
-            QFile::remove(tempPath);
-
         QThread *workerThread = new QThread(this);
-        DownloadWorker *worker = new DownloadWorker(m_url, i, start, end, tempPath, false, info);
+        DownloadWorker *worker = new DownloadWorker(m_url, i, start, end, false, info);
         worker->moveToThread(workerThread);
 
         m_workers.append(worker);
@@ -285,6 +280,10 @@ void Downloader::downloadResume(downloadInformations Info)
                    + "/Quantum";
     isResuming = true;
 
+    info.tempPath = m_qdmTempDir + "/" + info.fileName + ".qdm";
+    m_file.setFileName(info.tempPath);
+    m_file.resize(info.fileByteSize);
+
     m_bytesDownloaded = 0;
     chunkProgress.resize(info.chunkCount);
 
@@ -305,30 +304,23 @@ void Downloader::downloadResume(downloadInformations Info)
     qint64 chunkSize = info.fileByteSize / info.chunkCount;
     for (int i = 0; i < info.chunkCount; i++)
     {
-        QString tempPath = m_qdmTempDir + "/" + info.ID + "/" + QString("chunk%1.qdm").arg(i);
-        m_tempPaths.append(tempPath);
-
-        qint64 actualBytesOnDisk = QFileInfo(tempPath).exists() ? QFileInfo(tempPath).size() : 0;
-        chunkProgress[i] = actualBytesOnDisk;
-        m_bytesDownloaded += actualBytesOnDisk;
+        chunkProgress[i] = info.chunkProgress[i];
+        m_bytesDownloaded += chunkProgress[i];
 
         qint64 chunkEnd = (i == info.chunkCount - 1) ? info.fileByteSize - 1 : (i + 1) * chunkSize - 1;
         qint64 expectedChunkSize = chunkEnd - i * chunkSize + 1;
 
-        if (actualBytesOnDisk >= expectedChunkSize)
+        if (chunkProgress[i] >= expectedChunkSize)
         {
             m_chunksCompleted++;
             continue;
         }
 
-        qint64 start = i * chunkSize + actualBytesOnDisk;
+        qint64 start = i * chunkSize + chunkProgress[i];
         qint64 end = chunkEnd;
 
-        qDebug() << tempPath << "size:" << actualBytesOnDisk
-                 << "start:" << start << "end:" << end;
-
         QThread *workerThread = new QThread(this);
-        DownloadWorker *worker = new DownloadWorker(info.url, i, start, end, tempPath, true, info);
+        DownloadWorker *worker = new DownloadWorker(info.url, i, start, end, true, info);
         worker->moveToThread(workerThread);
 
         m_workers.append(worker);

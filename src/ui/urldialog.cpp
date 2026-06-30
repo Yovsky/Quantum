@@ -38,11 +38,14 @@ urlDialog::~urlDialog()
 
 void urlDialog::on_buttonBox_accepted()
 {
+    downloadInformations info;
+
     int threadNumber = 8;
     if (ui->threadNumber->currentIndex() == 0) threadNumber = 1;
     if (ui->threadNumber->currentIndex() == 1) threadNumber = 2;
     if (ui->threadNumber->currentIndex() == 2) threadNumber = 4;
     if (ui->threadNumber->currentIndex() == 4) threadNumber = 16;
+    info.chunkCount = threadNumber;
 
     QString urlText = ui->Url->text().trimmed();
 
@@ -52,12 +55,14 @@ void urlDialog::on_buttonBox_accepted()
         QMessageBox::warning(this, "Invalid URL", "Please enter a valid URL (e.g., https://example.com/file.zip)");
         return;
     }
+    info.url = address.toString();
 
     QString fileName = QFileInfo(address.path()).fileName();
     if (fileName.isEmpty() || fileName == ".")
     {
         fileName = "downloaded_file_" + QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
     }
+    info.fileName = fileName;
 
     QString downloadsDir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
     if (downloadsDir.isEmpty())
@@ -77,7 +82,10 @@ void urlDialog::on_buttonBox_accepted()
     }
 
     QString savePath = downloadsDir + "/" + fileName;
+    info.savePath = savePath;
+
     QString SHA256 = ui->SHA256->text();
+    info.SHA256 = SHA256;
 
     QFileInfo file(savePath);
     if (file.isFile() || file.exists())
@@ -94,7 +102,7 @@ void urlDialog::on_buttonBox_accepted()
         {
             QFile::remove(savePath);
             DownloadWindow *window = new DownloadWindow(nullptr);
-            window->startDownload(address, savePath, threadNumber, SHA256);
+            window->startDownload(info);
             window->setAttribute(Qt::WA_DeleteOnClose);
             window->show();
         }
@@ -102,7 +110,7 @@ void urlDialog::on_buttonBox_accepted()
     }
 
     DownloadWindow *window = new DownloadWindow(nullptr);
-    window->startDownload(address, savePath, threadNumber, SHA256);
+    window->startDownload(info);
     window->setAttribute(Qt::WA_DeleteOnClose);
     window->show();
 }
