@@ -25,6 +25,7 @@
 #include <QUrl>
 #include <QElapsedTimer>
 #include <QDebug>
+#include <QCloseEvent>
 
 namespace Ui {
 class DownloadWindow;
@@ -53,6 +54,9 @@ private slots:
 signals:
     void DownloadInfo(const downloadInformations& Info);
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 private:
     Ui::DownloadWindow *ui;
     Downloader *download;
@@ -61,6 +65,7 @@ private:
     QTime lastUpdateTime;
     downloadInformations info;
     bool isPaused = false;
+    bool didStop = false;
     qint64 lastProgress = 0;
     qint64 lastDownloaded = 0;
 };

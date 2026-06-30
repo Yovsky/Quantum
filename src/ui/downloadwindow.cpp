@@ -257,9 +257,21 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
 
 void DownloadWindow::downloadStop()
 {
-    // disconnect(download, nullptr, this, nullptr);
-    download->downloadStop();
-    this->close();
+    QMessageBox msg;
+    msg.setWindowTitle("Warning");
+    msg.setText("The download will be canceled and progress will be removed. \nAre you sure?");
+    msg.setIcon(QMessageBox::Warning);
+    QPushButton *No = msg.addButton("No", QMessageBox::DestructiveRole);
+    QPushButton *Yes = msg.addButton("Yes", QMessageBox::AcceptRole);
+    msg.setDefaultButton(Yes);
+    msg.exec();
+    if (msg.clickedButton() == Yes)
+    {
+        didStop = true;
+        ui->status->setText("Stopping download...");
+        download->downloadStop();
+        this->close();
+    }
 }
 
 DownloadWindow::~DownloadWindow()
@@ -269,7 +281,6 @@ DownloadWindow::~DownloadWindow()
 
 void DownloadWindow::on_Cancel_clicked()
 {
-    ui->status->setText("Stopping download...");
     downloadStop();
 }
 
@@ -298,4 +309,13 @@ void DownloadWindow::on_Pause_clicked()
         download->downloadResume(info);
     }
     ui->status->setText(info.status);
+}
+
+void DownloadWindow::closeEvent(QCloseEvent *event)
+{
+    downloadStop();
+    if (didStop)
+        event->accept();
+    else
+        event->ignore();
 }
