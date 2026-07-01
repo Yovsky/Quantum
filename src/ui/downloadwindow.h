@@ -68,6 +68,7 @@ private:
     bool didStop = false;
     qint64 lastProgress = 0;
     qint64 lastDownloaded = 0;
+    bool m_isWorking;
 };
 
 #endif // DOWNLOADWINDOW_H
