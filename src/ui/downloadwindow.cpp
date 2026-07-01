@@ -32,6 +32,7 @@ DownloadWindow::DownloadWindow(QWidget *parent)
     , ui(new Ui::DownloadWindow)
     , download(new Downloader(this))
 {
+    m_isWorking = true;
     ui->setupUi(this);
     AppGlobals::instance().setDownloadWindow(this);
     ui->adress->setReadOnly(true);
@@ -245,6 +246,7 @@ void DownloadWindow::onDownloadFinish(bool success, const QString &message)
     info.status = "Completed";
     emit DownloadInfo(info);
 
+    m_isWorking = false;
     FinishWindow finish(nullptr, info.url, info.savePath);
 
     QSystemTrayIcon tray;
@@ -313,9 +315,12 @@ void DownloadWindow::on_Pause_clicked()
 
 void DownloadWindow::closeEvent(QCloseEvent *event)
 {
-    downloadStop();
-    if (didStop)
-        event->accept();
-    else
-        event->ignore();
+    if(m_isWorking)
+    {
+        downloadStop();
+        if (didStop)
+            event->accept();
+        else
+            event->ignore();
+    }
 }
