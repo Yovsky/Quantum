@@ -20,6 +20,7 @@
 #include <QMessageBox>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QElapsedTimer>
 
 class Backend : public QObject
 {
