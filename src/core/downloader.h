@@ -39,6 +39,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QCoreApplication>
+#include <QElapsedTimer>
 
 class Downloader : public QObject
 {
